@@ -1,0 +1,1021 @@
+Unnamed: 0,question_id,title,body,tags,accepted_answer_id,accepted_answer_body,link,tag,creation_date,view_count,score,answer_count,is_answered,last_activity_date,last_edit_date,category
+697,74987587,"r quanteda filtering, counting and grouping features from a customized dictionary","i have the following data set:
+library(quanteda)
+library(quanteda.textstats)
+
+df_test<-c(""i find water to be so healthy and refreshing"",
+           ""nothing like a freshly made burguer to make me feel good"",
+           ""i dislike sugar in the morning it tastes horrible"",
+           ""a nice burguer is always crispy and spicy"",
+           ""it is beyond me to dare to drink soda it's just gross too much sugar"",
+           ""yes i will have a hot burguer anytime is so cheap and tasty"")
+
+i want to be able to built a customized dictionary so that i can
+classify words/tokens into two categories ""negative"" and ""positive""
+after that i want to filter by the most frequent words/tokens and plot
+the positive and negative words associated with them
+this is my dictionary
+dict_custom <- dictionary(list(positive = c(""healthy"", ""refreshing"", ""good"", ""crispy"", 
+                                      ""spicy"", ""cheap"", ""tasty""),
+                               negative=c(""horrible"",""gross"")))
+
+what are some of the most frequent tokens?
+> tok_df<-corpus(df_test) %>% tokens(remove_punct=true) %>% tokens_remove(stopwords(""en""))
+> 
+> tok_df %>% dfm() %>% 
++   textstat_frequency(5)  
+  feature frequency rank docfreq group
+1 burguer         3    1       3   all
+2   sugar         2    2       2   all
+3    find         1    3       1   all
+4   water         1    3       1   all
+5 healthy         1    3       1   all
+
+i want to choose burger and get all the positive and negative words (after using my dictionary) and count the number of times they appear also perhaps create a word_cloud
+i'm using this code:
+> tokens_lookup(tok_df,dictionary = dict_custom) %>% 
++   dfm()
+document-feature matrix of: 6 documents, 2 features (50.00% sparse) and 0 docvars.
+       features
+docs    positive negative
+  text1        2        0
+  text2        1        0
+  text3        0        1
+  text4        2        0
+  text5        0        1
+  text6        2        0
+
+but instead of words i get the count of positive and negative tokens per document.
+my desired output will contain a matrix/dfm like object filter by burger with all of the negative and positive tokens (crispy, healthy, gross, ect) instead of the count of neg and pos tokens by document (that i do not want).
+by the way, what if i want to instead of creating a neg and positive words, rather assign a numeric value lets say gross=-5 and crispy=5 how can i join and merge my tokens with this kind of dictionary so that i afterwards can summarize the numeric output?","['r', 'text-mining', 'quanteda']",75006355,"the best way to do this is using the ability of tokens_select() to filter on dictionaries. by indexing each key separately - below, using lapply - then you can create a list of dfm objects whose features are the value matches for each key.
+library(""quanteda"")
+#> package version: 3.2.4
+#> unicode version: 14.0
+#> icu version: 70.1
+#> parallel computing: 10 of 10 threads used.
+#> see  for tutorials and examples.
+library(""quanteda.textstats"")
+
+df_test <- c(""i find water to be so healthy and refreshing"",
+             ""nothing like a freshly made burguer to make me feel good"",
+             ""i dislike sugar in the morning it tastes horrible"",
+             ""a nice burguer is always crispy and spicy"",
+             ""it is beyond me to dare to drink soda it's just gross too much sugar"",
+             ""yes i will have a hot burguer anytime is so cheap and tasty"")
+
+dict_custom <- dictionary(list(positive = c(""healthy"", ""refreshing"", ""good"", ""crispy"", 
+                                            ""spicy"", ""cheap"", ""tasty""),
+                               negative = c(""horrible"",""gross"")))
+
+toks <- tokens(df_test)
+
+dfm_list <- lapply(
+    names(dict_custom), 
+    function(x) {
+        tokens_select(toks, dict_custom[x]) |>
+            dfm()
+    }
+)
+names(dfm_list) <- names(dict_custom)
+
+now you have a list of dfm objects, named by your dictionary keys, which you can then get frequencies for, or wordclouds, etc.
+dfm_list
+#> $positive
+#> document-feature matrix of: 6 documents, 7 features (83.33% sparse) and 0 docvars.
+#>        features
+#> docs    healthy refreshing good crispy spicy cheap tasty
+#>   text1       1          1    0      0     0     0     0
+#>   text2       0          0    1      0     0     0     0
+#>   text3       0          0    0      0     0     0     0
+#>   text4       0          0    0      1     1     0     0
+#>   text5       0          0    0      0     0     0     0
+#>   text6       0          0    0      0     0     1     1
+#> 
+#> $negative
+#> document-feature matrix of: 6 documents, 2 features (83.33% sparse) and 0 docvars.
+#>        features
+#> docs    horrible gross
+#>   text1        0     0
+#>   text2        0     0
+#>   text3        1     0
+#>   text4        0     0
+#>   text5        0     1
+#>   text6        0     0
+
+frequencies:
+lapply(dfm_list, textstat_frequency)
+#> $positive
+#>      feature frequency rank docfreq group
+#> 1    healthy         1    1       1   all
+#> 2 refreshing         1    1       1   all
+#> 3       good         1    1       1   all
+#> 4     crispy         1    1       1   all
+#> 5      spicy         1    1       1   all
+#> 6      cheap         1    1       1   all
+#> 7      tasty         1    1       1   all
+#> 
+#> $negative
+#>    feature frequency rank docfreq group
+#> 1 horrible         1    1       1   all
+#> 2    gross         1    1       1   all
+
+created on 2023-01-04 with reprex v2.0.2",https://stackoverflow.com/questions/74987587,r,02-01-2023 22:31,268.0,1.0,1.0,True,22-01-2023 11:29,22-01-2023 11:29,tool/library setup
+668,71721694,tensorflow2.x keras embedding layer process tf.dataset error,"this question is a follow-up of tensorflow 2 textvectorization process tensor and dataset error
+i would like to make do a word embedding for the processed text with tnesorflow 2.8 on jupyter.
+def standardize(input_data):
+
+    input_data = tf.strings.lower(input_data)
+    input_data = tf.strings.regex_replace(input_data, f""[{re.escape(string.punctuation)}]"", "" "")
+    return input_data
+
+# the input data loaded from text files by tfrecorddataset(file_paths, ""gzip"")
+# each file can be 200+mb, totally about 300 files
+# each file hold the data with multiple columns
+# some columns are text
+# after loading, the dataset will be accessed by column name 
+# e.g. one column is ""sports"", so the input_dataset[""sports""] 
+# return a tensor, which is like the following example
+
+input_data = tf.constant([[""swim 2008-07 baseball""], [""football""]], shape=(2, 1), dtype=tf.string)
+
+text_layer = tf.keras.layers.textvectorization( standardize = standardize, max_tokens = 10, output_mode = 'int', output_sequence_length=10 )
+
+dataset = tf.data.dataset.from_tensors( input_data )
+
+dataset = dataset.batch(2)
+
+text_layer.adapt(dataset)
+
+process_text = dataset.map(text_layer)
+
+emb_layer = layers.embedding(10, 10)
+
+emb_layer(process_text) # error 
+
+error:
+ attributeerror: exception encountered when calling layer ""embedding_7"" (type embedding).
+
+'mapdataset' object has no attribute 'dtype'
+
+call arguments received:
+
+ ï¿½ï¿½ï¿½ inputs=<mapdataset element_spec=tensorspec(shape=(none, 2, 10), dtype=tf.int64, name=none)>
+
+how can i convert a tf.dataset to tf.tensor ?
+this tensorflow: convert tf.dataset to tf.tensor does not help me.
+the above layers will be implemented in a machine learning neural network model.
+loading data --> processing features (multiple text columns) --> tokens --> embedding --> average pooling --> some dense layers --> output layer
+
+thanks","['python', 'tensorflow', 'keras', 'text-processing', 'word-embedding']",71732540,"you cannot feed a tf.data.dataset directly to an embedding layer, you can either use .map(...):
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import re
+import string 
+def standardize(input_data):
+
+    input_data = tf.strings.lower(input_data)
+    input_data = tf.strings.regex_replace(input_data, f""[{re.escape(string.punctuation)}]"", "" "")
+    return input_data
+
+input_data = tf.constant([[""swim 2008-07 baseball""], [""football""]], shape=(2, 1), dtype=tf.string)
+
+text_layer = tf.keras.layers.textvectorization( standardize = standardize, max_tokens = 10, output_mode = 'int', output_sequence_length=10 )
+
+dataset = tf.data.dataset.from_tensors( input_data )
+
+dataset = dataset.batch(2).map(lambda x: tf.squeeze(x, axis=0))
+
+text_layer.adapt(dataset)
+
+process_text = dataset.map(text_layer)
+
+emb_layer = layers.embedding(10, 10)
+process_text = process_text.map(emb_layer)
+
+or define your model and feed your dataset through model.fit(...):
+import tensorflow as tf
+import re
+import string 
+def standardize(input_data):
+
+    input_data = tf.strings.lower(input_data)
+    input_data = tf.strings.regex_replace(input_data, f""[{re.escape(string.punctuation)}]"", "" "")
+    return input_data
+
+input_data = tf.constant([[""swim 2008-07 baseball""], [""football""]], shape=(2, 1), dtype=tf.string)
+
+text_layer = tf.keras.layers.textvectorization( standardize = standardize, max_tokens = 10, output_mode = 'int', output_sequence_length=10 )
+
+dataset = tf.data.dataset.from_tensors( input_data )
+
+dataset = dataset.batch(2)
+
+text_layer.adapt(dataset)
+
+process_text = dataset.map(lambda x: (text_layer(tf.squeeze(x, axis=0)), tf.random.uniform((2, ), maxval=2, dtype=tf.int32))) # add random label to each entry
+
+inputs = tf.keras.layers.input((10, ))
+emb_layer = tf.keras.layers.embedding(10, 10)
+x = emb_layer(inputs)
+x = tf.keras.layers.globalaveragepooling1d()(x)
+outputs = tf.keras.layers.dense(1, 'sigmoid')(x)
+model = tf.keras.model(inputs, outputs)
+model.compile(optimizer='adam', loss='binary_crossentropy')
+model.fit(process_text)",https://stackoverflow.com/questions/71721694,python,02-04-2022 22:45,529.0,1.0,2.0,True,16-03-2023 20:29,03-04-2022 00:26,environment/configuration errors
+63,77792137,how to fix the learning-rate for huggingface&#180;s trainer?,"i'm training model with the following parameters:
+seq2seqtrainingarguments(
+    output_dir                   = ""./out"", 
+    overwrite_output_dir         = true,
+    do_train                     = true,
+    do_eval                      = true,
+    
+    per_device_train_batch_size  = 2, 
+    gradient_accumulation_steps  = 4,
+    per_device_eval_batch_size   = 8, 
+    
+    learning_rate                = 1.25e-5,
+    warmup_steps                 = 1,
+    
+    save_total_limit             = 1,
+       
+    evaluation_strategy          = ""epoch"",
+    save_strategy                = ""epoch"",
+    logging_strategy             = ""epoch"",  
+    num_train_epochs             = 5,   
+    
+    gradient_checkpointing       = true,
+    fp16                         = true,    
+        
+    predict_with_generate        = true,
+    generation_max_length        = 225,
+          
+    report_to                    = [""tensorboard""],
+    load_best_model_at_end       = true,
+    metric_for_best_model        = ""wer"",
+    greater_is_better            = false,
+    push_to_hub                  = false,
+)
+
+i assume that warmup_steps=1 fixes the learning rate.
+however, after finished training i'm looking on the file trainer_state.json, and it seems that the learning rate is not fixed.
+here are the values of learning_rate and step:
+learning_rate,     steps
+1.0006 e-05       1033
+7.5062 e-06       2066
+5.0058 e-06       3099
+2.5053 e-06       4132
+7.2618 e-09       5165
+
+it seems that the learning rate is not fixed on 1.25e-5 (after step 1). what am i missing? how to i fix the learning rate.","['machine-learning', 'deep-learning', 'huggingface-transformers', 'huggingface-trainer', 'learning-rate']",77793731,"a warm-up is in general an increase of the learning rate. it starts at 0 and then increases linearly over 1(here) step to the specified learning rate of 1.25e-5.
+afterwards by default a linear (in other cases a cosine) learning-rate scheduler decays your learning-rate.
+to disable the decay add lr_scheduler_type='constant'.
+if i recall correctly, this also disables the warmup.
+if you want warmup and afterwards a constant rate use constant_with_warmup instead.
+edit: valid scheduler types are defined in trainer_utils.py, in the class schedulertype:
+class schedulertype(explicitenum):
+    """"""
+    scheduler names for the parameter `lr_scheduler_type` in [`trainingarguments`].
+    by default, it uses ""linear"". internally, this retrieves `get_linear_schedule_with_warmup` scheduler from [`trainer`].
+    scheduler types:
+       - ""linear"" = get_linear_schedule_with_warmup
+       - ""cosine"" = get_cosine_schedule_with_warmup
+       - ""cosine_with_restarts"" = get_cosine_with_hard_restarts_schedule_with_warmup
+       - ""polynomial"" = get_polynomial_decay_schedule_with_warmup
+       - ""constant"" =  get_constant_schedule
+       - ""constant_with_warmup"" = get_constant_schedule_with_warmup
+       - ""inverse_sqrt"" = get_inverse_sqrt_schedule
+       - ""reduce_lr_on_plateau"" = get_reduce_on_plateau_schedule
+       - ""cosine_with_min_lr"" = get_cosine_with_min_lr_schedule_with_warmup
+       - ""warmup_stable_decay"" = get_wsd_schedule
+    """"""
+
+    linear = ""linear""
+    cosine = ""cosine""
+    cosine_with_restarts = ""cosine_with_restarts""
+    polynomial = ""polynomial""
+    constant = ""constant""
+    constant_with_warmup = ""constant_with_warmup""
+    inverse_sqrt = ""inverse_sqrt""
+    reduce_on_plateau = ""reduce_lr_on_plateau""
+    cosine_with_min_lr = ""cosine_with_min_lr""
+    warmup_stable_decay = ""warmup_stable_decay""",https://stackoverflow.com/questions/77792137,machine-learning,10-01-2024 09:14,4614.0,1.0,2.0,True,16-02-2025 22:20,11-06-2024 07:42,implementation issues
+534,77959997,how do you send files to the openai api?,"for fun i wanted to try to make a tool to ask chatgpt to document rust files. i found an issue, in that the maximum message length the api allows seems to be 2048 characters.
+it seems that the openai api allows you to send files, so i was hoping that by sending  the files to the server the model would have the context it needs to generate the comments.
+however, i don't seem to be able to do so, i tried this:
+use std::fmt::write;
+use std::fs;
+use std::io;
+use std::io::read;
+
+use chatgpt::prelude::*;
+use clap::parser;
+use syn;
+use syn::item;
+use reqwest;
+
+#[derive(parser, debug)]
+#[command(author, version, about, long_about = none)]
+struct args
+{
+    /// path to the source code to document
+    #[arg(short, long)]
+    file_path: string,
+}
+
+fn main()
+{
+    let args = args::parse();
+
+    let mut file = std::fs::file::open(args.file_path).unwrap();
+    let mut content = string::new();
+    file.read_to_string(&mut content).unwrap();
+
+    let ast = syn::parse_file(&content).unwrap();
+    let mut input_buffer = string::new();
+
+    // getting the api key here
+    let key = ""my key that i have replaced for obvious reasons"";
+
+    {
+        // create a reqwest client
+        let client = reqwest::blocking::client::new();
+
+        // make a post request to the openai api
+        let response = client
+            .post(""
+            .header(""authorization"", ""bearer my key that i have replaced for obvious reasons"")
+            .header(""content-type"", ""application/json"")
+            .body(content.clone())
+            .send().unwrap();
+
+        // check if the request was successful
+        if response.status().is_success() {
+            println!(""file uploaded successfully!"");
+        } else {
+            println!(""failed to upload file. status code: {}"", response.status());
+        }
+
+        std::mem::forget(client);
+        std::mem::forget(response);
+    }
+}
+
+the response i get is:
+failed to upload file. status code: 415 unsupported media type
+i am not sure what i am doing wrong. i have also tried changign the content type to text/plain, i get the same error.","['rust', 'documentation', 'openai-api']",77962025,"the async-openai crate has files, which allows you to upload files to openai:
+let client = client::new();
+let request = createfilerequest {
+    input: ""path/to/my/file.bin"".into(),
+    purpose: ""test"".into(),
+};
+let response = client.files().create (request).await?;",https://stackoverflow.com/questions/77959997,rust,08-02-2024 07:45,2438.0,0.0,1.0,True,12-02-2024 07:58,08-02-2024 08:01,deployment and integration
+66,70069026,how to use files in the answer api of openai,"as finally openai opened the gpt-3 related api publicly,
+i am playing with it to explore and discover his potential.
+i am trying the answer api, the simple example that is in the documentation:
+
+i upload the .jsonl file as indicated, and i can see it succesfully uploaded with the openai.file.list() api.
+when i try to use it, unfortunately, i always get the same error:
+>>> openai.file.create(purpose='answers', file=open('example.jsonl') )
+<file file id=file-xxx at 0x7fbc9eca5e00> json: {
+  ""bytes"": 140,
+  ""created_at"": 1637597242,
+  ""filename"": ""example.jsonl"",
+  ""id"": ""file-xxx"",
+  ""object"": ""file"",
+  ""purpose"": ""answers"",
+  ""status"": ""uploaded"",
+  ""status_details"": null
+}
+
+#use the file in the api:
+openai.answer.create(
+    search_model=""ada"", 
+    model=""curie"", 
+    question=""which puppy is happy?"", 
+    file=""file-xxx"", 
+    examples_context=""in 2017, u.s. life expectancy was 78.6 years."", 
+    examples=[[""what is human life expectancy in the united states?"", ""78 years.""]], 
+    max_rerank=10,
+    max_tokens=5,
+    stop=[""\n"", ""<|endoftext|>""]
+)
+<some exception, then>
+openai.error.invalidrequesterror: file is still processing.  check back later.
+
+
+i have waited several hours, and i do not think this content deserve such a long wait...
+do you know if it is a normal behaviour, or if i miss something?
+thanks","['python', 'openai-api', 'gpt-3']",70157536,"after a few hours (the day after) the file metadata status changed from uploaded to processed and the file could be used in the answer api as stated in the documentation.
+i think this need to be better documented in the original openai api reference.",https://stackoverflow.com/questions/70069026,python,22-11-2021 16:19,6853.0,4.0,1.0,True,15-01-2023 17:50,15-01-2023 17:50,implementation issues
+622,77859773,"hugging face, whisper model large v2, outputs weird character after training","i have been fine-tuning whisper on jasmin cgn which is a dutch dataset. i have preprocessed it locally. the original encoding for the sentences there is latin_1, but i made sure to convert each one of them to utf_8.v then i followed the steps in that hf tutorial for whisper fine-tuning, and this is the output i get (i use jiwer to get side-by-side sentence comparisons):
+sentence 80
+
+ref: \*\*\*\* maar voor de idianen was het niet zo voor hun moest een jongend een goede jager en krijger worden end een meisje moet goed kunnen koken en dat leerden ze niet op school de vader de grootvaders en de ooms vertelden de kleine jongens alles ik kan \*\*\* niet de oorlog ze toonden hem hoe je een spoor van de dier volgt end hoe je een boog opspant
+
+hyp: ï¿½ï¿½ï¿½ien maar voor de idianen was het niet zo voor hen moest een jongent een goede jager en krijger worden en een meisje moet goed kunnen koken en dat leerden ze niet op school de vader de grootvaders en de ooms vertelden de kleine jongens alles ik kaniet de oorlog ze toonden hem hoe je het spoor van de dier volgt en toe je een boog opspant 
+
+
+sentence 76
+
+ref: \* pakketten zijn uh in verschillende soorten en maten je kunt zo allerlei dingen gebruiken je kunt ze voor allerlei dingen gebruiken een een gemeente is uh een stad of een dorp of een paar klein dorpen samen ambtenaren van de gemeente cuntroleren of alle kinderen naar school gaan de gemeente houdt de stad schoon en zorgt v voor goede uhm straten en fietspaden ook zorgt de gemeente voor de bomen en de parken het is ook belangrijk dat de v
+
+hyp: ï¿½ï¿½ï¿½ pakketten zijn ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½n \*\* verschillende soorten en maten je kunt ze allerlei dingen gebruiken je kunt ze voor allerlei dingen gebruiken een een gemeente is uh een stad of een dorp of een paar klein dorpen samen ambtenaren van de gemeente controleren of alle kinderen naar school gaan de gemeente houdt de stad schoon en zorgt v voor goede uhm straten en fietspaden ook zorgt de gemeente voor de bomen en de parken het is ook belangr/pre>
+does anyone know what the ""?"" is? i checked my test file with the whisper model without training it and i don't get any question marks there so i think there is something up with the training.
+thanks for your help. :)","['speech-recognition', 'huggingface-transformers', 'openai-whisper', 'huggingface-trainer']",77940116,"i have finally figured out when the replacement character is there. during the evaluation pipeline we can specify the language of the model. when you specify that ""language"":""<|nl|>"", there is no longer the replacement character! that way the whisper processor knows the language and doesnï¿½ï¿½ï¿½t get confused by the utf8 codes that it doesnï¿½ï¿½ï¿½t have in english. (at least thatï¿½ï¿½ï¿½s",https://stackoverflow.com/questions/77859773,speech-recognition,22-01-2024 12:14,658.0,0.0,2.0,True,05-02-2024 10:13,22-01-2024 12:18,uncategorized
+346,18902608,generating the plural form of a noun,"given a word, which may or may not be a singular-form noun, how would you generate its plural form?
+based on this nltk tutorial and this informal list on pluralization rules, i wrote this simple function:
+def plural(word):
+    """"""
+    converts a word to its plural form.
+    """"""
+    if word in c.plurale_tantums:
+        # defective nouns, fish, deer, etc
+        return word
+    elif word in c.irregular_nouns:
+        # foot->feet, person->people, etc
+        return c.irregular_nouns[word]
+    elif word.endswith('fe'):
+        # wolf -> wolves
+        return word[:-2] + 'ves'
+    elif word.endswith('f'):
+        # knife -> knives
+        return word[:-1] + 'ves'
+    elif word.endswith('o'):
+        # potato -> potatoes
+        return word + 'es'
+    elif word.endswith('us'):
+        # cactus -> cacti
+        return word[:-2] + 'i'
+    elif word.endswith('on'):
+        # criterion -> criteria
+        return word[:-2] + 'a'
+    elif word.endswith('y'):
+        # community -> communities
+        return word[:-1] + 'ies'
+    elif word[-1] in 'sx' or word[-2:] in ['sh', 'ch']:
+        return word + 'es'
+    elif word.endswith('an'):
+        return word[:-2] + 'en'
+    else:
+        return word + 's'
+
+but i think this is incomplete. is there a better way to do this?","['python', 'nlp', 'wordnet', 'linguistics']",19018986,"the pattern-en package offers pluralization
+>>> import pattern.text.en
+>>> pattern.text.en.pluralize(""dog"")
+'dogs'
+
+note also that in order to run the import above successfully, you may have to first execute the following (at least the first time):
+>>> import nltk
+>>> nltk.download('omw-1.4')",https://stackoverflow.com/questions/18902608,python,19-09-2013 18:44,29817.0,14.0,5.0,True,03-06-2024 02:39,20-09-2013 13:35,uncategorized
+490,74522493,creating and visualizing spacy spans,"i have a problem visualizing manually created spans in spacy:
+given the simple code:
+from spacy.tokens import span
+text = ""welcome to the bank of china. ""
+nlp = spacy.blank(""en"")
+doc = nlp(text)
+
+doc.spans[""xx""] = [span(doc, 0, 1, ""org"")]
+doc.spans[""sc""] = [
+    span(doc, 3, 6, ""org""), 
+    span(doc, 5, 6, ""gpe""),
+    span(doc, 2, 4, ""welcome"")
+]
+
+the following visualizer works:
+displacy.render(doc, style=""span"")
+
+
+but if the spans do not contain the key ""sc"" it does not work
+
+the error is key error ""sc""
+what is the problem there? why is the rendering not showing me all the spans?
+the code giving the error is:
+doc.spans[""xx""] = [
+    span(doc, 3, 6, ""org""), 
+    span(doc, 5, 6, ""gpe""),
+    span(doc, 2, 4, ""welcome"")
+]
+displacy.render(doc, style=""span"", options ={""spans_key"":""xx""})","['python', 'spacy']",74527341,"as explained in the displacy documentation, by default the spans in the key ""sc"" are used. you can change it with the spans_key parameter.
+render doesn't take spans_key correctly, you have to include it in options.
+from the docs, modified to use render instead of serve:
+doc.spans[""custom""] = [span(doc, 3, 6, ""bank"")]
+options = {""spans_key"": ""custom""}
+displacy.render(doc, style=""span"", options=options)",https://stackoverflow.com/questions/74522493,python,21-11-2022 17:05,424.0,0.0,1.0,True,22-11-2022 13:44,22-11-2022 13:44,tool/library setup
+557,71280204,group numpy array elements without for-loop,"after doing some text processing, i've got a list of tokens and a list of sentence indices, one for each token. now i'd like to reassemble the tokens into sentences. i've used numpy, but i feel like there's a better/faster/more-numpy-ish way to do this...without a for loop. there could be a lot more than two sentences in the future.
+import numpy as np
+
+all_tokens = np.array(['i', 'spent', 'a', 'lot', 'of', 'time', ',', 'money', ',', 'and', 'effort', 'childproofing', 'my', 'house', '.', 'however', ',', 'the', 'kids', 'still', 'get', 'in', '.'])
+sent_ids = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1])
+
+new_sents = []
+for unique_sent_id in np.unique(sent_ids):
+    sent_tokens = all_tokens[sent_ids == unique_sent_id].tolist()
+    new_sents.append(' '.join(sent_tokens))
+
+result: [""i spent a lot of time , money , and effort childproofing my house ."", ""however , the kids still get in .""]","['python', 'numpy', 'performance', 'nlp']",71280315,"assuming sent_ids is ordered, you can find out the position where sent_id has changed  and then split tokens based on that:
+list(map("" "".join, np.split(all_tokens, np.flatnonzero(np.diff(sent_ids) != 0)+1)))
+# ['i spent a lot of time , money , and effort childproofing my house .', 'however , the kids still get in .']",https://stackoverflow.com/questions/71280204,python,26-02-2022 20:54,79.0,0.0,2.0,True,26-02-2022 21:14,26-02-2022 21:00,data preparation and wrangling
+456,65699672,how to force a certain tag in spacy?,"i'm using spacy '3.0.0rc2' with a custom model. unfortunately my training data is low in hyphens (-), therefore the hyphen often gets tagged as noun.
+is there some way to force a certain tag or pos, to make sure that all the  - tokens get tagged with punct?
+basically i am looking for a solution like proposed in the answer to this question here:
+how to force a pos tag in spacy before/after tagger?
+unfortunately this does not seem to work anymore (at least for spacy 3) and raises an error:
+valueerror: [e1005] unable to set attribute 'pos' in tokenizer exception for '{g}'. tokenizer exceptions are only allowed to specify orth and norm.
+
+(same when trying to assign the tag attribute)
+i know that it would be possible to create a custom component with a matcher that looks just for the hyphen and assigns the right tag. however this seems to be overkill when considering that i currently just want to handle one token.
+is there some way to force tags in spacy 3, without re-tagging during processing using a custom component?
+ideally i would want to modify the tag attribute and let the pos attribute get assigned automatically by spacy based on that tag attribute.
+as in the spacy-annotations tag=hyph should be mapped to pos=punct.","['python', 'nlp', 'spacy']",65701412,"in spacy v3, exceptions like this can be implemented in the attribute_ruler component:
+ruler = nlp.add_pipe(""attribute_ruler"")
+patterns = [[{""orth"": ""-""}]]
+attrs = {""tag"": ""hyph"", ""pos"": ""punct""}
+ruler.add(patterns=patterns, attrs=attrs)
+
+be aware that the attribute ruler runs the pattern matching once based on the initial doc state, so you can't use the output attrs of one rule as the input pattern for another. this comes up in pipelines like en_core_web_sm, where the included attribute ruler does the tag->pos mapping. so if you have another rule that should match on a pos pattern, you'd have to add a second attribute ruler component to handle those cases.
+see:",https://stackoverflow.com/questions/65699672,python,13-01-2021 10:07,1533.0,2.0,2.0,True,26-04-2021 09:51,13-01-2021 10:52,implementation issues
+65,76187256,"importerror: urllib3 v2.0 only supports openssl 1.1.1+, currently the &#39;ssl&#39; module is compiled with libressl 2.8.3","after pip install openai, when i try to import openai, it shows this error:
+
+the 'ssl' module of urllib3 is compile with libressl not openssl
+
+i just followed a tutorial on a project about using api of openai. but when i get to the first step which is the install and import openai, i got stuck. and i tried to find the solution for this error but i found nothing.
+here is the message after i try to import openai:
+python 3.9.6 (default, mar 10 2023, 20:16:38)
+[clang 14.0.3 (clang-1403.0.22.14.1)] on darwin
+type ""help"", ""copyright"", ""credits"" or ""license"" for more information.
+
+>>> import openai
+
+traceback (most recent call last):
+  file ""<stdin>"", line 1, in <module>
+  file ""/users/yule/library/python/3.9/lib/python/site-packages/openai/__init__.py"", line 19, in <module>
+    from openai.api_resources import (
+  file ""/users/mic/library/python/3.9/lib/python/site-packages/openai/api_resources/__init__.py"", line 1, in <module>
+    from openai.api_resources.audio import audio  # noqa: f401
+  file ""/users/mic/library/python/3.9/lib/python/site-packages/openai/api_resources/audio.py"", line 4, in <module>
+    from openai import api_requestor, util
+  file ""/users/mic/library/python/3.9/lib/python/site-packages/openai/api_requestor.py"", line 22, in <module>
+    import requests
+  file ""/users/mic/library/python/3.9/lib/python/site-packages/requests/__init__.py"", line 43, in <module>
+    import urllib3
+  file ""/users/mic/library/python/3.9/lib/python/site-packages/urllib3/__init__.py"", line 38, in <module>
+    raise importerror(
+importerror: urllib3 v2.0 only supports openssl 1.1.1+, currently the 'ssl' module is compiled with libressl 2.8.3. see: 
+
+i tried to --upgrade the urllib3, but it is still not working. the result is:
+pip3 install --upgrade urllib3
+defaulting to user installation because normal site-packages is not writeable
+requirement already satisfied: urllib3 in ./library/python/3.9/lib/python/site-packages (2.0.2)","['python', 'openai-api', 'urllib3']",76187415,"the reason why the error message mentioned openssl 1.1.1+ and libressl 2.8.3 is that urllib3 v2.0 (the version you've installed) requires openssl 1.1.1+ to work properly, as it relies on some new features of openssl 1.1.1.
+the issue is that the version of the 'ssl' module that is currently installed in your environment is compiled with libressl 2.8.3, which is not compatible with urllib3 v2.0.
+to use urllib3 v2.0, you need an 'ssl' module compiled with openssl 1.1.1 or later, by trying:
+brew install openssl@1.1
+
+or you could use an older version of urllib3 that is compatible suc. for example urllib3 v1.26.6, which does not have a strict openssl version requirement.
+you can force the version installing with this command:
+pip install urllib3==1.26.6",https://stackoverflow.com/questions/76187256,python,06-05-2023 05:11,414804.0,175.0,19.0,True,05-12-2024 12:05,14-08-2023 00:20,environment/configuration errors
+286,77640823,how to make azure openai service use default system message in api calls?,"i have created an azure openai service and set a default system message. i want to create a chatbot by sending api calls to the endpoint and integrating it into an existing react app as a component.
+my aim is to allow other team members to modify and fine tune the system message and examples. however, whenever i call the openai service through api calls, i must always send the system message and examples with the request. it seems that the api responses disregard the system message unless i send it with the request.
+i assumed that the default system message gets saved to the deployment and i would not have to send it on every request. is there a way to configure the azure openai service to always use the default system message that is configured in the azure openai studio?","['openai-api', 'azure-openai']",77641567,"the current 'state of the art' does not support that, as it works on the basis of stateless interaction. what you can do is place a system prompt in a variable and include it in the openai sdk call, or you can build a facade class around it. this makes it part of a class's default prompt, especially useful if you're leveraging it from multiple places, ensuring it's not 'forgotten'.",https://stackoverflow.com/questions/77640823,openai-api,11-12-2023 16:01,941.0,0.0,1.0,True,11-12-2023 18:14,11-12-2023 16:08,implementation issues
+636,71512064,error while loading vector from glove in spacy,"i am facing the following attribute error when loading glove model:
+code used to load model:
+nlp = spacy.load('en_core_web_sm')
+tokenizer = spacy.load('en_core_web_sm', disable=['tagger','parser', 'ner', 'textcat'])
+nlp.vocab.vectors.from_glove('../models/glove')
+
+getting the following atribute error when trying to load the glove model:
+attributeerror: 'spacy.vectors.vectors' object has no attribute 'from_glove'
+
+have tried to search on stackoverflow and elsewhere but can't seem to find the solution. thanks!
+from pip list:
+
+spacy version: 3.1.4
+spacy-legacy 3.0.8
+en-core-web-sm 3.1.0","['python', 'python-3.x', 'nlp', 'spacy', 'stanford-nlp']",71516020,use spacy init vectors to load vectors from word2vec/glove text format into a new pipeline:,https://stackoverflow.com/questions/71512064,python,17-03-2022 12:10,504.0,2.0,2.0,True,08-03-2023 01:46,08-03-2023 01:46,tool/library setup
+67,77373522,how does an instance of pytorch&#39;s `nn.linear()` process a tuple of tensors?,"in the annotated transformer's implementation of multi-head attention, three tensors (query, key, value) are all passed to a nn.linear(d_model, d_model):
+# some class definition ...
+self.linears = clones(nn.linear(d_model, d_model), 4) # deep-copied list of nn.linear-modules concatenated via nn.modulelist
+# more code ...
+query, key, value = [
+  lin(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)
+  for lin, x in zip(self.linears, (query, key, value))
+]
+
+my question: what happens at lin(x), when an instance of nn.linear() is called on the tuple (query, key, value)? is the tuple somehow concatenated to a tensor? if so, how - on which dimension are the tensors concatenated?","['python', 'machine-learning', 'pytorch', 'nlp', 'transformer-model']",77373814,"self.linears = clones(nn.linear(d_model, d_model), 4) # deep-copied list of nn.linear-modules concatenated via nn.modulelist
+# more code ...
+query, key, value = [
+  lin(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)
+  for lin, x in zip(self.linears, (query, key, value))
+]
+
+actually, the nn.linear does not process input as a tuple of a q,k,v.
+in your code, the result similar like this
+out_q = self.linears[0](q)
+out_k = self.linears[1](k)
+out_v = self.linears[2](v)
+
+when you use zip(iterable a, iterable b)
+so you will get the pairs (a[0], b[0]) (a[1], b[1]) ,... independently
+or more specific
+query = self.linears[0](query)
+key = self.linears[1](key)
+value = self.linears[2](value)",https://stackoverflow.com/questions/77373522,python,27-10-2023 10:43,178.0,0.0,1.0,True,27-10-2023 13:33,27-10-2023 13:33,uncategorized
+327,75744401,can someone explain how to create a ptb dataset and/or train my own model using stanfordnlp?,"i'm learning about sentiment analysis and i can't seem to find anything online that outlines how to create a ptb dataset. i'm using stanfordnlp with java. i've downloaded the test, dev and validate data that they used and i can't get my head around how these have been outlined:
+test.txt:
+(3 (2 (2 the) (2 rock)) (4 (3 (2 is) (4 (2 destined) (2 (2 (2 (2 (2 to) (2 (2 be) (2 (2 the) (2 (2 21st) (2 (2 (2 century) (2 's)) (2 (3 new) (2 (2 ``) (2 conan)))))))) (2 '')) (2 and)) (3 (2 that) (3 (2 he) (3 (2 's) (3 (2 going) (3 (2 to) (4 (3 (2 make) (3 (3 (2 a) (3 splash)) (2 (2 even) (3 greater)))) (2 (2 than) (2 (2 (2 (2 (1 (2 arnold) (2 schwarzenegger)) (2 ,)) (2 (2 jean-claud) (2 (2 van) (2 damme)))) (2 or)) (2 (2 steven) (2 segal))))))))))))) (2 .)))
+
+i figure that numbers are aligned to sentiment value but i'm still not sure how it works.
+tldr; i'm trying to develop my own model for news analysis and have seen that the stanfordnlp model has been trained on movie reviews which is leading to poor sentiment analysis so, i thought to attempt to develop my own but i can't find anything online that teaches what each element is or how to even do this.
+at best; outlined on this page: 
+is the dataset available and the code to train.
+models can be retrained using the following command using the ptb format dataset:
+
+java -mx8g edu.stanford.nlp.sentiment.sentimenttraining -numhid 25 -trainpath train.txt -devpath dev.txt -train -model model.ser.gz
+
+i have the data that i need to parse ready.","['java', 'machine-learning', 'stanford-nlp']",75745771,"okay.. so i've done some more digging and have started to finally understand (some what) as how to create a dataset tree and will try to break it down for anyone who stumbles upon this post with the same troubles as i've been having.
+step 1.
+
+find your data. (in my case it's news articles about the uk housing
+market)
+
+uk renters: are you living with someone youï¿½ï¿½ï¿½ve fallen out with?
+uk property asking prices stagnating, lifting hopes of softer landing for housing market
+
+step 2.
+
+annotate your data
+
+2 uk renters: are you living with someone youï¿½ï¿½ï¿½ve fallen out with?
+1 fallen out with
+1 fallen out
+2 uk renters
+2 living with someone
+3 fallen
+2 :
+2 ?
+2 living with
+2 someone
+
+3 uk property asking prices stagnating, lifting hopes of softer landing for housing market
+2 uk property
+3 asking prices stagnating
+2 asking prices
+4 lifting hopes
+2 hopes
+4 lifting hopes of softer landing
+3 softer landing for housing mark market
+2 lifting
+2 landing
+2 , 
+
+annotation meanings
+very positive= 4
+positive = 3
+neutral = 2
+negative = 1
+very negative = 0
+
+structure
+2 uk renters: are you living with someone youï¿½ï¿½ï¿½ve fallen out with?
+   //overall sentiment
+
+1 fallen out with
+   // negative
+
+1 fallen out
+   // negative
+
+2 uk renters
+   // neutral
+
+...etc..
+
+
+save the annotated data to a .txt (sample.txt)
+
+step 3:
+
+locate your stanford-corenlp-4.5.2.jar
+
+example  ~/.m2/repository/edu/stanford/nlp/stanford-corenlp/4.5.2
+
+
+
+step 4:
+
+open bash and run
+
+java -cp ""*"" -mx5g edu.stanford.nlp.sentiment.buildbinarizeddataset -input /c/users/rusku/desktop/stanfordnpl/russample/sample.txt
+replace the above data location
+
+
+
+step 5:
+
+result
+
+(2 (2 (2 (2 uk) (2 renters)) (2 :)) (2 (2 (2 (2 are) (2 you)) (2 (2 living) (2 (2 with) (2 (2 someone) (2 (2 you) (2 (2 ï¿½ï¿½ï¿½ve) (1 (1 (3 fallen) (2 out)) (2 with)))))))) (2 ?)))
+(3 (3 (2 (3 uk) (3 property)) (2 (3 asking) (3 prices))) (3 (3 (3 stagnating) (3 (2 ,) (4 (2 lifting) (2 hopes)))) (3 (3 of) (3 (3 (3 softer) (2 landing)) (3 (3 for) (2 (3 housing) (3 market)))))))
+
+resource: train stanford corenlp about the sentiment of domain-specific phrases
+this is as far as i've currently gotten.
+hope this helps.",https://stackoverflow.com/questions/75744401,java,15-03-2023 11:58,165.0,0.0,1.0,True,15-03-2023 17:45,15-03-2023 15:10,implementation issues
+395,77282461,huggingface bettertransformer in `with` context - cannot disable after context,"i am writing a custom with context manager to temporarily make the model a bettertransformer model while calling trainer.evaluate().
+i evaluated before, in, and after the with context. i noticed that the evaluation after the with context still uses bettertransformer. this is a problem because the trainer.train() call afterwards will also use bettertransformer, resulting in poor training due to padding.
+how do i create a custom with context that only uses bettertransformer inside the context, not afterwards?
+please find the mwe gist here.
+i created a custom context manager:
+class bettertransformercontext:
+    """"""temporarily replace a model with a bettertransformer model.""""""
+
+    def __init__(self, model):
+        self.model = model
+        self.original_model = none
+
+    def __enter__(self):
+        self.original_model = self.model
+        self.model = bettertransformer.transform(self.model)
+        return self.model
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.model = self.original_model
+        # self.model = bettertransformer.reverse(self.model)  # note: same result
+
+the output is as follows. evaluating without bettertransformer handles approximately 100 it/s, with bettertransformer handles approximately 115 it/s. as you can see, evaluating after the context still results in 115 it/s.
+========== without optimum (-> should be slow) ==========
+bt before context:  false
+100%|ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýý| 204/204 [00:01<00:00, 103.09it/s]
+0.3161764705882353
+========== with optimum (-> should be fast) ==========
+bt in context:  true
+100%|ýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýý| 204/204 [00:01<00:00, 116.68it/s]
+0.3161764705882353
+========== without optimum (-> should be slow) ==========
+bt after context:  true
+100%|ýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýýý| 204/204 [00:01<00:00, 116.53it/s]
+0.3161764705882353","['python', 'huggingface-transformers', 'with-statement', 'contextmanager', 'huggingface-trainer']",77302404,"i found a solution by using a custom context manager on the trainer object, as opposed to applying it on a model object.
+the custom context manager is as follows:
+class bettertransformertrainercontext:
+    """"""context manager to wrap trainer.model with bettertransformer.""""""
+    def __init__(self, trainer):
+        self.trainer = trainer
+
+    def __enter__(self):
+        self.trainer.model = bettertransformer.transform(
+            self.trainer.model, keep_original_model=true
+        )
+        return self.trainer
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.trainer.model = bettertransformer.reverse(self.trainer.model)
+
+it can be used as follows:
+print(""="" * 10, ""with optimum (-> should be fast)"", ""="" * 10)
+with bettertransformertrainercontext(trainer) as _optimum_trainer:
+    eval_accuracy = _optimum_trainer.evaluate()[""eval_accuracy""]
+    print(eval_accuracy)
+
+i hope this might be helpful to someone else.",https://stackoverflow.com/questions/77282461,python,12-10-2023 16:48,112.0,0.0,1.0,True,16-10-2023 13:31,12-10-2023 16:51,uncategorized
+244,71512301,"error: could not build wheels for spacy, which is required to install pyproject.toml-based projects","hi guys, i am trying to install spacy model == 2.3.5 but i am getting this error, please help me!","['python', 'python-3.x', 'pip', 'nlp', 'spacy']",74540622,"i had the similar error while executing pip install -r requirements.txt but for aiohttp module:
+socket.c -o build/temp.linux-armv8l-cpython-311/aio
+aio fatal error: 'longintrepr.h' file not found
+#include ""longintrepr.h""                                   
+          ^~~~~~~                        1 error generated.
+error: command '/data/data/com.termux/files/usr/bin/arm-linux-androideabi-clang' 
+failed with exit code 1
+[end of output]
+note: this error originates from a subprocess, and is likely not a problem with pip.
+error: failed building wheel for aiohttp
+failed to build aiohttp
+error: could not build wheels for aio which is required to install
+pyproject.toml-based projects
+
+just in case i will leave here solution to my error. this error is specific to python 3.11 version. on python with 3.10.6 version installation went fine.
+to solve it i needed to update requirements.txt.
+not working versions of modules with python 3.11:
+aio
+yarl==1.4.2
+frozenlist==1.3.0
+
+working versions:
+aio
+yarl==1.8.1
+frozenlist==1.3.1
+
+links to the corresponding issues with fixes:",https://stackoverflow.com/questions/71512301,python,17-03-2022 12:29,47328.0,5.0,4.0,True,27-05-2024 06:20,27-05-2024 06:20,tool/library setup
+377,36966019,how aretf-idf calculated by the scikit-learn tfidfvectorizer,"i run the following code to convert the text matrix to tf-idf matrix.
+text = ['this is a string','this is another string','tfidf computation calculation','tfidf is the product of tf and idf']
+
+from sklearn.feature_extraction.text import tfidfvectorizer
+vectorizer = tfidfvectorizer(max_df=1.0, min_df=1, stop_words='english',norm = none)
+                    
+x = vectorizer.fit_transform(text)
+x_vocab = vectorizer.get_feature_names_out()
+x_mat = x.todense()
+x_idf = vectorizer.idf_
+
+i get the following output
+x_vocab =
+[u'calculation',
+ u'computation',
+ u'idf',
+ u'product',
+ u'string',
+ u'tf',
+ u'tfidf']
+
+and x_mat =
+  ([[ 0.        ,  0.        ,  0.        ,  0.        ,  1.51082562,
+      0.        ,  0.        ],
+    [ 0.        ,  0.        ,  0.        ,  0.        ,  1.51082562,
+      0.        ,  0.        ],
+    [ 1.91629073,  1.91629073,  0.        ,  0.        ,  0.        ,
+      0.        ,  1.51082562],
+    [ 0.        ,  0.        ,  1.91629073,  1.91629073,  0.        ,
+      1.91629073,  1.51082562]])
+
+now i dont understand how these scores are computed. my idea is that for the text[0], score for only 'string' is computed and there is a score in the 5th coloumn. but as tf_idf is the product of term frequency which is 2 and idf which is log(4/2) is 1.39 and not 1.51 as shown in the matrix. how is the tf-idf score calculated in scikit-learn.","['nlp', 'scikit-learn', 'tf-idf']",36972265,"tf-idf is done in multiple steps by scikit learn's tfidfvectorizer, which in fact uses tfidftransformer and inherits countvectorizer.
+let me summarize the steps it does to make it more straightforward:
+
+tfs are calculated by countvectorizer's fit_transform()
+idfs are calculated by tfidftransformer's fit()
+tfidfs are calculated by tfidftransformer's transform()
+
+you can check the source code here.
+back to your example. here is the calculation that is done for the tfidf weight for the 5th term of the vocabulary, 1st document (x_mat[0,4]):
+first, the tf for 'string', in the 1st document:
+tf = 1
+
+second, the idf for 'string', with smoothing enabled (default behavior):
+df = 2
+n = 4
+idf = ln(n + 1 / df + 1) + 1 = ln (5 / 3) + 1 = 1.5108256238
+
+and finally, the tfidf weight for (document 0, feature 4):
+tfidf(0,4) = tf * idf = 1 * 1.5108256238 = 1.5108256238
+
+i noticed you choose not to normalize the tfidf matrix. keep in mind normalizing the tfidf matrix is a common and usually recommended approach, since most models will require the feature matrix (or design matrix) to be normalized.
+tfidfvectorizer will l-2 normalize the output matrix by default, as a final step of the calculation. having it normalized means it will have only weights between 0 and 1.",https://stackoverflow.com/questions/36966019,nlp,01-05-2016 11:16,14203.0,21.0,3.0,True,10-06-2024 23:20,10-06-2024 23:20,uncategorized
+611,21063206,information gain calculation for a text file?,"i'm working on ""text categorization using information gain,pca and genetic algorithm"" but after performing preprocessing(stemming, stopword removal, tfidf) on the document m confused how to move ahead for information gain part.
+my out file contain word and there tfidf value.
+like
+word - tfidf value
+together(word) - 0.235(tfidf value)
+come(word) - 0.2548(tfidf value)
+when using weka for information gain (""infogainattributeeval.java"") it require .arff file format as input.
+is there any to convert text file into .arff format.
+or any other way to preform information gain other than weka?
+is there any other open source for calculating information gain for document ?","['java', 'data-mining', 'information-retrieval', 'text-mining']",21453103,"i found my answer.
+in this we have to generate arff file.
+in .arff file
+@relation section will contain all words present in your whole document after preprocessing .each word will be of type real because tfidf value is a real value.
+@data section will contain their tfidf value calculated during preprocessing.
+for example first will contain tfidf value all words present in first document an at last  colunm the document categary.
+@relation filename
+@attribute word1 real
+@attribute word2 real
+@attribute word3 real
+.
+.
+.
+.so on
+@attribute class {cacm,cisi,cran,med}
+
+@data
+0.5545479562,0.27,0.554544479562,0.4479562,cacm
+0.5545479562,0.27,0.554544479562,0.4479562,cacm
+0.55454479562,0.1619617,0.579562,0.5542,cisi
+0.5545479562,0.27,0.554544479562,0.4479562,cisi
+0.0,0.2396113617,0.44479562,0.2,cran
+0.5545479562,0.27,0.554544479562,0.4479562,carn
+0.5545177444479562,0.26196113617,0.0,0.0,med
+0.5545479562,0.27,0.554544479562,0.4479562,med
+
+after you generate this file you can give this file as input to infogainattributeeval.java. and this working for me.",https://stackoverflow.com/questions/21063206,java,11-01-2014 14:05,2209.0,2.0,2.0,True,08-01-2022 13:20,30-01-2014 10:00,uncategorized
+527,75740652,fastapi streamingresponse not streaming with generator function,"i have a relatively simple fastapi app that accepts a query and streams back the response from chatgpt's api. chatgpt is streaming back the result and i can see this being printed to console as it comes in.
+what's not working is the streamingresponse back via fastapi. the response gets sent all together instead. i'm really at a loss as to why this isn't working.
+here is the fastapi app code:
+import os
+import time
+
+import openai
+
+import fastapi
+from fastapi import depends,  status, request
+from fastapi.security import  
+from fastapi.responses import streamingresponse
+
+auth_scheme = 
+app = fastapi.fastapi()
+
+openai.api_key = os.environ[""openai_api_key""]
+
+
+def ask_statesman(query: str):
+    #prompt = router(query)
+    
+    completion_reason = none
+    response = """"
+    while not completion_reason or completion_reason == ""length"":
+        openai_stream = openai.chatcompletion.create(
+            model=""gpt-3.5-turbo"",
+            messages=[{""role"": ""user"", ""content"": query}],
+            temperature=0.0,
+            stream=true,
+        )
+        for line in openai_stream:
+            completion_reason = line[""choices""][0][""finish_reason""]
+            if ""content"" in line[""choices""][0].delta:
+                current_response = line[""choices""][0].delta.content
+                print(current_response)
+                yield current_response
+                time.sleep(0.25)
+
+
+@app.post(""/"")
+async def request_handler(auth_key: str, query: str):
+    if auth_key != ""123"":
+        raise 
+            status_code=status.
+            detail=""invalid authentication credentials"",
+            headers={"" auth_scheme.scheme_name},
+        )
+    else:
+        stream_response = ask_statesman(query)
+        return streamingresponse(stream_response, media_type=""text/plain"")
+
+
+if __name__ == ""__main__"":
+    import uvicorn
+    uvicorn.run(app, host=""0.0.0.0"", port=8000, debug=true, log_level=""debug"")
+
+and here is the very simple test.py file to test this:
+import requests
+
+query = ""how tall is the eiffel tower?""
+url = ""
+params = {""auth_key"": ""123"", ""query"": query}
+
+response = requests.post(url, params=params, stream=true)
+
+for chunk in response.iter_lines():
+    if chunk:
+        print(chunk.decode(""utf-8""))","['python', 'python-requests', 'streaming', 'fastapi', 'openai-api']",75760884,"first, it wouldn't be good practice to use a post request for requesting data from the server. instead, a get request would be more suitable to your case scenario. in addition to that, you shouldn't be sending credentials, such as auth_key as part of the url (i.e., using the query string), but you should rather use headers and/or cookies (using  please have a look at this answer for more details and examples on the concepts of headers and cookies, as well as the risks involved when using query parameters instead. helpful posts around this topic can also be found here and here, as well as here, here and here.
+second, if you are executing a blocking operation (i.e., blocking i/o-bound or cpu-bound tasks) inside the streamingresponse's generator function, you should define the generator function with def instead of async def, as, otherwise, the blocking operation, as well as the time.sleep() function that is used inside your generator, would blcok the event loop. as explained here, if the function for streaming the response body is a normal def generator and not an async def one, fastapi will use iterate_in_threadpool() to run the iterator/generator in a separate thread that is then awaitedï¿½ï¿½ï¿½see streamingresponse's relevant source code. if you prefer using an async def generator, then make sure to execute any blocking operations in an external threadpool (or processpool) and await it, as well as use await asyncio.sleep() instead of time.sleep(), in cased you need to add delay in the execution of an operation. have a look at this detailed answer for more details and examples.
+third, you are using requests' iter_lines() function, which iterates over the response data, one line at a time. if, however, the response data did not include any line break character (i.e., \n), you wouldn't see the data on client's console getting printed as they arrive, until the entire response is received by the client and printed as a whole. in that case, you should instead use iter_content() and specify the chunk_size as desired (both cases are demonstrated in the example below).
+finally, if you would like the streamingresponse to work in every web browser (including chrome as well)ï¿½ï¿½ï¿½in the sense of being able to see the data as they stream inï¿½ï¿½ï¿½you should specify the media_type to a different type than text/plain (e.g., application/json or text/event-stream, "" or disable mime sniffing. as explained here, browsers will start buffering text/plain responses for a certain amount (around 1445 bytes, as documented here), in order to check whether or not the content received is actually plain text. to avoid that, you can either set the media_type to text/event-stream (used for server-sent events), or keep using text/plain, but set the x-content-type-options response header to nosniff, which would disable mime sniffing (both options are demonstrated in the example below).
+working example
+app.py
+from fastapi import fastapi
+from fastapi.responses import streamingresponse
+import asyncio
+
+
+app = fastapi()
+
+
+async def fake_data_streamer():
+    for i in range(10):
+        yield b'some fake data\n\n'
+        await asyncio.sleep(0.5)
+
+
+# if your generator contains blocking operations such as time.sleep(), then define the
+# generator function with normal `def`. alternatively, use `async def` and run any 
+# blocking operations in an external threadpool/processpool. (see 2nd paragraph of this answer)
+'''
+import time
+
+def fake_data_streamer():
+    for i in range(10):
+        yield b'some fake data\n\n'
+        time.sleep(0.5)
+'''        
+
+    
+@app.get('/')
+async def main():
+    return streamingresponse(fake_data_streamer(), media_type='text/event-stream')
+    # or, use:
+    '''
+    headers = {'x-content-type-options': 'nosniff'}
+    return streamingresponse(fake_data_streamer(), headers=headers, media_type='text/plain')
+    '''
+
+test.py (using python requests)
+import requests
+
+url = ""
+
+with requests.get(url, stream=true) as r:
+    for chunk in r.iter_content(1024):  # or, for line in r.iter_lines():
+        print(chunk)
+
+test.py (using  this, as well as this and this for the benefits of using  over requests)
+import 
+
+url = '
+
+with  url) as r:
+    for chunk in r.iter_raw():  # or, for line in r.iter_lines():
+        print(chunk)",https://stackoverflow.com/questions/75740652,python,15-03-2023 04:48,75613.0,40.0,6.0,True,14-04-2025 11:33,14-04-2025 11:33,deployment and integration

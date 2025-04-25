@@ -1,0 +1,875 @@
+question_id,title,body,tags,accepted_answer_id,accepted_answer_body,link,tag,creation_date,view_count,score,answer_count,is_answered,last_activity_date,last_edit_date,category
+61826824,can you train a bert model from scratch with task specific architecture?,"bert pre-training of the base-model is done by a language modeling approach, where we mask certain percent of tokens in a sentence, and we make the model learn those missing mask. then, i think in order to do downstream tasks, we add a newly initialized layer and we fine-tune the model.
+however, suppose we have a gigantic dataset for sentence classification. theoretically, can we initialize the bert base architecture from scratch, train both the additional downstream task specific layer + the base model weights form scratch with this sentence classification dataset only, and still achieve a good result?","['machine-learning', 'nlp', 'bert-language-model']",61839719,"bert can be viewed as a language encoder, which is trained on a humongous amount of data to learn the language well. as we know, the original bert model was trained on the entire english wikipedia and book corpus, which sums to 3,300m words. bert-base has 109m model parameters. so, if you think you have large enough data to train bert, then the answer to your question is yes. 
+however, when you said ""still achieve a good result"", i assume you are comparing against the original bert model. in that case, the answer lies in the size of the training data.
+i am wondering why do you prefer to train bert from scratch instead of fine-tuning it? is it because you are afraid of the domain adaptation issue? if not, pre-trained bert is perhaps a better starting point.
+please note, if you want to train bert from scratch, you may consider a smaller architecture. you may find the following papers useful.
+
+well-read students learn better: on the importance of pre-training compact models
+albert: a lite bert for self-supervised learning of language representations",https://stackoverflow.com/questions/61826824,machine-learning,15-05-2020 19:21,6813.0,6.0,2.0,True,01-02-2024 15:10,01-02-2024 15:10,Implementation Issues
+52047163,use natural language processing to to split bad &amp; good comments from an employee survey,"so bit of a long shot here, and i apologize for the lack of information. however, i'm struggling to even know where to look now. 
+so i'm trying to split good and bad comments from a made-up survey of employees at a random company. all i have is a dataframe consisting of the comment an employee has made along with their managers id code. the idea is to try and see how many good and/or bad comments are associated with a manager via their id.
+import pandas as pd 
+trial_text=pd.read_csv(""trial.csv"")
+trial_text.head()
+
+   managercode              comment
+0        ab123  great place to work
+1        ab123  need more training
+2        ab123  hate working here
+3        ab124  always late home
+4        ab124  manager never listens
+
+i've used nltk quite a lot for data sets that include a lot more information so anything nltk based won't be a problem. like i say, with what i have, ""google"" has far too much information that i don't know where to begin (or that is useful)! if there's anyone that might just have a suggestion that could put me on track that would be great!
+thanks","['python', 'nlp', 'nltk']",52056089,"you need sentiment analysis. i don't think you will get amazing results with an off-the-shelf model though, because your responses are quite short and quite domain specific. in case you want to try anyway, here is an example of how to use the vader model with nltk:
+from nltk.sentiment.vader import sentimentintensityanalyzer
+sid = sentimentintensityanalyzer()
+sid.polarity_scores('great place to work')
+>>> {'neg': 0.0, 'neu': 0.423, 'pos': 0.577, 'compound': 0.6249}
+sid.polarity_scores('manager never listens')
+>>> {'neg': 0.0, 'neu': 1.0, 'pos': 0.0, 'compound': 0.0}
+
+as you can see, your mileage may vary.
+if you have lots of responses (thousands), a more viable strategy would be to manually label a sample of e.g. a few tens to a few hundred and to train your own sentiment classifier. here are some good tutorials of how to do this with either nltk or sklearn",https://stackoverflow.com/questions/52047163,python,27-08-2018 21:23,384.0,0.0,3.0,True,20-09-2024 11:43,29-08-2018 07:23,Implementation Issues
+36064946,text summarization in r language,"i have long text file using help of r language i want to summarize text in at least 10 to 20 line or in small sentences.
+how to summarize text in at least 10 line with r language ?","['r', 'text', 'text-mining', 'summarization']",36065535,"you may try this (from the lsafun package):
+genericsummary(d,k=1)
+
+whereby 'd' specifies your text document and 'k' the number of sentences to be used in the summary. (further modifications are shown in the package documentation).
+for more information:",https://stackoverflow.com/questions/36064946,r,17-03-2016 15:26,10453.0,4.0,4.0,True,31-10-2023 16:24,17-03-2016 16:23,Implementation Issues
+72933472,modulenotfounderror in spacy version 3.3.1 tried previous mentioned solution not working,"import spacy
+
+     from spacy.lemmatizer import lemmatizer
+
+     from spacy.lang.en import lemma_index, lemma_exc, lemma_rules
+
+     lemmatizer = lemmatizer(lemma_index, lemma_exc, lemma_rules)
+
+     lemmatizer('chuckles', 'noun')
+
+the output should be chuckle.
+using version 3.1.1","['python', 'nlp', 'chatbot', 'lemmatization', 'spacy-3']",72939110,"it looks like they've changed the way the lemmatizer is instantiated but the following should work...
+import spacy
+nlp = spacy.load('en_core_web_sm', disable=['ner', 'tagger', 'parser', 'lemmatizer'])
+lemmatizer = nlp.get_pipe('lemmatizer')
+t = nlp('chuckles')[0]  
+t.pos_ = 'noun'
+lemma = lemmatizer.lemmatize(t)[0]
+print(lemma)
+# >> chuckle
+
+
+it's unfortunate that you have to call the lemmatizer with a token but looking at the code, i don't see a way to call it with (word, pos). i think you're stuck with calling the empty pipeline with a single word to get a token then manually setting the pos_ before calling lemmatize(t).
+note that the pos tagger will not work correctly on a single word. it only works in sentences and will probably always assign noun for pos if you only have one word. this is why i've disabled the pipeline and set t.pos_ manually.
+btw.. if you only need to lemmatize, you might look at lemminflect which is simpler for single word and also more accurate.",https://stackoverflow.com/questions/72933472,python,11-07-2022 03:41,310.0,0.0,1.0,True,11-07-2022 13:20,11-07-2022 04:29,Tool Setup/Errors
+70426487,how to find a pattern inside a pattern when start and end is known?,"i have a pattern that has a starting and ending pattern like:
+start = '\n\\[\n'
+end = '\n\\]\n'
+
+my string is:
+'the above mentioned formal formula is\nthat of\n\\[\n\\oplus \\bigoplus_{(5)} \\widehat{c_{(5)}} a_{5} g(2)\n\\]\na. tobacco\nb. tulip\nc. soybean\nd. sunhemp'
+
+i want to find:
+\n\\oplus \\bigoplus_{(5)} \\widehat{c_{(5)}} a_{5} g(2)'
+
+if i use:
+re.findall(r'\s*\\+\n\\[\n(.*?)\\+\n\\]\n', mystring)
+
+r'\s*\\+\[(.*?)\\+\]' # did not work either
+
+then it gives me an empty result. what am  i doing wrong here?","['python', 'nlp', 'python-re']",70426840,"this works for me:
+mystring = 'the above mentioned formal formula is\nthat of\n\\[\n\\oplus \\bigoplus_{(5)} \\widehat{c_{(5)}} a_{5} g(2)\n\\]\na. tobacco\nb. tulip\nc. soybean\nd. sunhemp'
+
+expected_result = '\n\\oplus \\bigoplus_{(5)} \\widehat{c_{(5)}} a_{5} g(2)'
+
+import codecs
+import re
+
+matches = re.findall(r'\\n\\\\\[(\\n.*)\\n\\\\\]\\n', repr(mystring))
+
+results = [codecs.decode(match, 'unicode_escape') for match in matches]
+
+results
+['\n\\oplus \\bigoplus_{(5)} \\widehat{c_{(5)}} a_{5} g(2)']
+
+results[0] == expected_result
+true",https://stackoverflow.com/questions/70426487,python,20-12-2021 18:33,70.0,1.0,2.0,True,21-12-2021 08:13,20-12-2021 18:42,Implementation Issues
+74961297,failed to connect to tensorflow master: tpu worker may not be ready or tensorflow master address is incorrect,"i signed up for the tensor research cloud (trc) program for the third time in two years. now i barely created a preemptible v3-8 tpu. before that, i could efficiently allocate five non-preemptible v3-8 tpus. even with this allocation (preemptible and non-preemptible), the tpu is listed as ready and healthy. however, when i try to access it from the pretraining script, i run into this error that i have never encountered before:
+failed to connect to the tensorflow master. the tpu worker may not be ready (still scheduling), or the tensorflow master address is incorrect.
+
+i know that the tensorflow master address is correct, and i have checked that the tpu is healthy and ready. i have also double-checked that my code is correctly creating the tensorflow session and specifying the tpu address.
+what could be causing this error message, and how can i troubleshoot and fix it?
+i also tried this code from  note that i'm not using colab but using google cloud platform.
+resolver = tf.distribute.cluster_resolver.tpuclusterresolver(tpu='pretrain-1')
+tf.config.experimental_connect_to_cluster(resolver)
+# this is the tpu initialization code that has to be at the beginning.
+tf.tpu.experimental.initialize_tpu_system(resolver)
+print(""all devices: "", tf.config.list_logical_devices('tpu'))
+
+any i'm stuck at:
+info:tensorflow:initializing the tpu system: pretrain-1
+
+however, i expected something like this:
+info:tensorflow:deallocate tpu buffers before initializing tpu system.
+2022-12-20 13:08:56.187870: e tensorflow/compiler/xla/stream_executor/cuda/cuda_driver.cc:267] failed call to cuinit: cuda_error_no_device: no cuda-capable device is detected
+info:tensorflow:deallocate tpu buffers before initializing tpu system.
+info:tensorflow:initializing the tpu system: grpc://10.99.59.162:8470
+info:tensorflow:initializing the tpu system: grpc://10.99.59.162:8470
+info:tensorflow:finished initializing tpu system.
+info:tensorflow:finished initializing tpu system.
+all devices:  [logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:0', device_type='tpu'), logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:1', device_type='tpu'), logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:2', device_type='tpu'), logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:3', device_type='tpu'), logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:4', device_type='tpu'), logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:5', device_type='tpu'), logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:6', device_type='tpu'), logicaldevice(name='/job:worker/replica:0/task:0/device:tpu:7', device_type='tpu')]
+
+edit: i successfully accessed the tpu with the same configurations from a new tensor research cloud (trc) account. however, the problem is still ongoing with the previous trc account. i suspect it might be a problem with the google cloud platform (gcp) configuration.","['google-cloud-platform', 'google-compute-engine', 'bert-language-model', 'pre-trained-model', 'tpu']",74974689,"i solved the problem by deleting all tpus and vm instances and then disabling and reenabling all apis.
+the issue might be related to the vpn connection to a gpu cluster during enabling services.",https://stackoverflow.com/questions/74961297,google-cloud-platform,30-12-2022 12:01,551.0,0.0,2.0,True,01-01-2023 12:48,01-01-2023 12:48,Data Wrangling
+73318795,build vocab in doc2vec,"i have a list of abstracts and articles approx 500 in csv each paragraph contains approx 800 to 1000 words whenever i build vocab and print with words giving none and how i can improve results?
+    lst_doc = doc.translate(str.maketrans('', '', string.punctuation))
+
+    target_data = word_tokenize(lst_doc)
+
+    train_data = list(read_data())
+
+    model = gensim.models.doc2vec.doc2vec(vector_size=50, min_count=2, epochs=40)
+
+    train_vocab = model.build_vocab(train_data)
+
+    print(train_vocab)
+
+   {train = model.train(train_data, total_examples=model.corpus_count, 
+   epochs=model.epochs) }
+
+output:
+none","['machine-learning', 'nlp', 'word2vec', 'doc2vec']",73324980,"a call to build_vocab() only builds the vocabulary inside the model, for further usage. that function call doesn't return anything, so your train_vocab variable will be python none.
+so, the behavior you're seeing is as expected, and you should say more about what your ultimate aims are, and what you'd want to see as steps towards those aims, if you're stuck.
+if you want to see reporting of the progress of your calls to build_vocab() or train(), you can set the logging level to info. this is always a usually a good idea working to learn a new library: even if initially the copious info shown is hard to understand, by reviewing it you'll start to see the various internal steps, and internal counts/timings/etc, that hint whehter things are doing well or poorly.
+you can also examine the state of the model and its various internal properties after the code has run.
+for example, the model.wv property contains, after build_vocab(), a gensim keyedvectors structure holding all the untrained ready-for-training vectors. you can ask for its length (len(model.wv) or examine the discovered active list of words (model.wv.index_to_key).
+other comments:
+
+it's not clear your 1st two lines ï¿½ï¿½ï¿½ assigning into lst_doc and target_data ï¿½ï¿½ï¿½ affect anything further, since it's unclear what read_data() might be doing to fill the train_corpus.
+
+often low min_count values worsen results, by including more words that have so few usage examples that they're little more than noise during training.
+
+only 500 documents is rather small compared to most published work showing impressive results with this algorithm, which uses tens-of-thousands of documents (if not millions). so, keep in mind that results on such a smaay be unrepresentative of what's possible with a larger corpus - in terms of quality, optimal parameters, etc.",https://stackoverflow.com/questions/73318795,machine-learning,11-08-2022 10:01,449.0,0.0,1.0,True,11-08-2022 17:55,11-08-2022 11:03,Implementation Issues
+70680290,indexerror: target is out of bounds,"i am currently trying to replicate the article
+
+to get an introduction to pytorch and bert.
+i used some own sample corpus and corresponding tragets as practise, but the code throws the following:
+---------------------------------------------------------------------------
+indexerror                                traceback (most recent call last)
+<ipython-input-4-8577755f37de> in <module>()
+    201 lr = 1e-6
+    202 
+--> 203 trainer(model, df_train, df_val, lr, epochs)
+
+3 frames
+<ipython-input-4-8577755f37de> in trainer(model, train_data, val_data, learning_rate, epochs)
+    162                 output = model(input_id, mask)
+    163 
+--> 164                 batch_loss = criterion(output, torch.max(train_label,1)[1])
+    165                 total_loss_train += batch_loss.item()
+    166 
+
+/usr/local/lib/python3.7/dist-packages/torch/nn/modules/module.py in _call_impl(self, *input, **kwargs)
+   1100         if not (self._backward_hooks or self._forward_hooks or self._forward_pre_hooks or _global_backward_hooks
+   1101                 or _global_forward_hooks or _global_forward_pre_hooks):
+-> 1102             return forward_call(*input, **kwargs)
+   1103         # do not call functions when jit is used
+   1104         full_backward_hooks, non_full_backward_hooks = [], []
+
+/usr/local/lib/python3.7/dist-packages/torch/nn/modules/loss.py in forward(self, input, target)
+   1150         return f.cross_entropy(input, target, weight=self.weight,
+   1151                                ignore_index=self.ignore_index, reduction=self.reduction,
+-> 1152                                label_smoothing=self.label_smoothing)
+   1153 
+   1154 
+
+/usr/local/lib/python3.7/dist-packages/torch/nn/functional.py in cross_entropy(input, target, weight, size_average, ignore_index, reduce, reduction, label_smoothing)
+   2844     if size_average is not none or reduce is not none:
+   2845         reduction = _reduction.legacy_get_string(size_average, reduce)
+-> 2846     return torch._c._nn.cross_entropy_loss(input, target, weight, _reduction.get_enum(reduction), ignore_index, label_smoothing)
+   2847 
+   2848 
+
+indexerror: target 32 is out of bounds.
+
+the code is mostly identical to the one in the article, except of course the more extensive lable-dict.
+orginial:
+labels = {'business':0,
+          'entertainment':1,
+          'sport':2,
+          'tech':3,
+          'politics':4
+          }
+
+mine:
+labels = 
+{'macroeconomics': 0,
+ 'microeconomics': 1,
+ 'labor economics': 2,
+ 'subnational fiscal issues': 3,
+ 'econometrics': 4,
+ 'international economics': 5,
+ 'financial economics': 6,
+ 'health, education, and welfare': 7,
+ 'public economics': 8,
+ 'development and growth': 9,
+ 'industrial organization': 10,
+ 'other': 11,
+ 'environmental and resource economics': 12,
+ 'history': 13,
+ 'regional and urban economics': 14,
+ 'development economics': 15,
+ 'corporate finance': 16,
+ 'children': 17,
+ 'labor studies': 18,
+ 'economic fluctuations and growth': 19,
+ 'economics of aging': 20,
+ 'economics of education': 21,
+ 'international trade and investment': 22,
+ 'asset pricing': 23,
+ 'health economics': 24,
+ 'law and economics': 25,
+ 'international finance and macroeconomics': 26,
+ 'monetary economics': 27,
+ 'technical working papers': 28,
+ 'political economy': 29,
+ 'development of the american economy': 30,
+ 'health care': 31,
+ 'productivity, innovation, and entrepreneurship': 32}
+
+code:
+class dataset(torch.utils.data.dataset):
+
+    def __init__(self, df):
+
+        self.labels = torch.longtensor([labels[label] for label in df[""category""]])
+        self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = 512, truncation=true,
+                                return_tensors=""pt"") for text in df['text']]
+
+    def classes(self):
+        return self.labels
+
+    def __len__(self):
+        return len(self.labels)
+
+    def get_batch_labels(self, idx):
+        # fetch a batch of labels
+        return np.array(self.labels[idx])
+
+    def get_batch_texts(self, idx):
+        # fetch a batch of inputs
+        return self.texts[idx]
+
+    def __getitem__(self, idx):
+        batch_texts = self.get_batch_texts(idx)
+        batch_y = np.array(range(0,len(labels)))
+
+        return batch_texts, batch_y
+    
+#splitting the sample into trainingset, validationset and testset (80,10,10)
+np.random.seed(112)
+df_train, df_val, df_test = np.split(df.sample(frac=1, random_state=42), 
+                                     [int(.8*len(df)), int(.9*len(df))])
+
+print(len(df_train),len(df_val), len(df_test))
+
+
+from torch import nn
+
+class bertclassifier(nn.module):
+
+    def __init__(self, dropout=0.5):
+
+        super(bertclassifier, self).__init__()
+
+        self.bert = bertmodel.from_pretrained('bert-base-cased')
+        self.dropout = nn.dropout(dropout)
+        self.linear = nn.linear(768, 5)
+        self.relu = nn.relu()
+
+    def forward(self, input_id, mask):
+
+        _, pooled_output = self.bert(input_ids= input_id, attention_mask=mask,return_dict=false)
+        dropout_output = self.dropout(pooled_output)
+        linear_output = self.linear(dropout_output)
+        final_layer = self.relu(linear_output)
+
+        return final_layer
+    
+from torch.optim import adam
+from tqdm import tqdm
+
+def trainer(model, train_data, val_data, learning_rate, epochs):
+
+    train, val = dataset(train_data), dataset(val_data)
+    
+    train_dataloader = torch.utils.data.dataloader(train, batch_size=2, shuffle=true)
+    val_dataloader = torch.utils.data.dataloader(val, batch_size=2)
+
+    use_cuda = torch.cuda.is_available()
+    device = torch.device(""cuda"" if use_cuda else ""cpu"")
+
+    criterion = nn.crossentropyloss()
+    optimizer = adam(model.parameters(), lr= learning_rate)
+
+    if use_cuda:
+
+            model = model.cuda()
+            criterion = criterion.cuda()
+
+    for epoch_num in range(epochs):
+
+            total_acc_train = 0
+            total_loss_train = 0
+
+            for train_input, train_label in tqdm(train_dataloader):
+
+                train_label = train_label.to(device)
+                mask = train_input['attention_mask'].to(device)
+                input_id = train_input['input_ids'].squeeze(1).to(device)
+
+                output = model(input_id, mask)
+                
+                batch_loss = criterion(output, torch.max(train_label,1)[1])
+                total_loss_train += batch_loss.item()
+                
+                acc = (output.argmax(dim=1) == train_label).sum().item()
+                total_acc_train += acc
+
+                model.zero_grad()
+                batch_loss.backward()
+                optimizer.step()
+            
+            total_acc_val = 0
+            total_loss_val = 0
+
+            with torch.no_grad():
+
+                for val_input, val_label in val_dataloader:
+
+                    val_label = val_label.to(device)
+                    mask = val_input['attention_mask'].to(device)
+                    input_id = val_input['input_ids'].squeeze(1).to(device)
+
+                    output = model(input_id, mask)
+
+                    batch_loss = criterion(output, val_label)
+                    total_loss_val += batch_loss.item()
+                    
+                    acc = (output.argmax(dim=1) == val_label).sum().item()
+                    total_acc_val += acc
+            
+            print(
+                f'epochs: {epoch_num + 1} | train loss: {total_loss_train / len(train_data): .3f} \
+                | train accuracy: {total_acc_train / len(train_data): .3f} \
+                | val loss: {total_loss_val / len(val_data): .3f} \
+                | val accuracy: {total_acc_val / len(val_data): .3f}')
+                  
+epochs = 5
+model = bertclassifier()
+lr = 1e-6
+              
+trainer(model, df_train, df_val, lr, epochs)","['python', 'pytorch', 'text-classification', 'bert-language-model']",70682744,"you're creating a list of length 33 in your __getitem__ call which is one more than the length of the labels list, hence the out of bounds error. in fact, you create the same list each time this method is called. you're supposed to fetch the associated y with the x found at idx.
+if you replace batch_y = np.array(range(...)) with batch_y = np.array(self.labels[idx]), you'll fix your error. indeed, this is already implemented in your get_batch_labels method.",https://stackoverflow.com/questions/70680290,python,12-01-2022 10:53,17137.0,0.0,1.0,True,12-01-2022 14:00,12-01-2022 13:49,Implementation Issues
+52021855,nltk linguistic tree traversal and extract noun phrase (np),"i created a custom classifier based chunker: digdug_classifier, which chunks the following sentence:
+sentence = ""there is high signal intensity evident within the disc at t1.""
+
+to create these chunks:
+(s
+  (np there/ex)
+  (vp is/vbz)
+  (np high/jj signal/jj intensity/nn evident/nn)
+  (pp within/in)
+  (np the/dt disc/nn)
+  (pp at/in)
+  (np t1/nnp)
+  ./.)
+
+i need to create a list of just the np from the above, like this:
+np = ['there', 'high signal intensity evident', 'the disc', 't1']
+
+i wrote the following code:
+output = []
+for subtree in digdug_classifier.parse(pos_tags): 
+    try:
+        if subtree.label() == 'np': output.append(subtree)
+    except attributeerror:
+        output.append(subtree)
+print(output)
+
+but that gives me this answer instead:
+[tree('np', [('there', 'ex')]), tree('np', [('high', 'jj'), ('signal', 'jj'), ('intensity', 'nn'), ('evident', 'nn')]), tree('np', [('the', 'dt'), ('disc', 'nn')]), tree('np', [('t1', 'nnp')]), ('.', '.')]
+
+what can i do to get the desired answer?","['python', 'tree', 'nltk', 'chunking']",52023337,"first, see how to traverse an nltk tree object?
+specific to your question of extraction np:
+>>> from nltk import tree
+>>> parse_tree = tree.fromstring(""""""(s
+...   (np there/ex)
+...   (vp is/vbz)
+...   (np high/jj signal/jj intensity/nn evident/nn)
+...   (pp within/in)
+...   (np the/dt disc/nn)
+...   (pp at/in)
+...   (np t1/nnp)
+...   ./.)"""""")
+
+# iterating through the parse tree and 
+# 1. check that the subtree is a tree type and 
+# 2. make sure the subtree label is np
+>>> [subtree for subtree in parse_tree if type(subtree) == tree and subtree.label() == ""np""]
+[tree('np', ['there/ex']), tree('np', ['high/jj', 'signal/jj', 'intensity/nn', 'evident/nn']), tree('np', ['the/dt', 'disc/nn']), tree('np', ['t1/nnp'])]
+
+# to access the item inside the tree object, 
+# use the .leaves() function
+>>> [subtree.leaves() for subtree in parse_tree if type(subtree) == tree and subtree.label() == ""np""]
+[['there/ex'], ['high/jj', 'signal/jj', 'intensity/nn', 'evident/nn'], ['the/dt', 'disc/nn'], ['t1/nnp']]
+
+# to get the string representation of the leaves
+# use "" "".join()
+>>> [' '.join(subtree.leaves()) for subtree in parse_tree if type(subtree) == tree and subtree.label() == ""np""]
+['there/ex', 'high/jj signal/jj intensity/nn evident/nn', 'the/dt disc/nn', 't1/nnp']
+
+
+# to just get the leaves' string, 
+# iterate through the leaves and split the string and
+# keep the first part of the ""/""
+>>> ["" "".join([leaf.split('/')[0] for leaf in subtree.leaves()]) for subtree in parse_tree if type(subtree) == tree and subtree.label() == ""np""]
+['there', 'high signal intensity evident', 'the disc', 't1']",https://stackoverflow.com/questions/52021855,python,25-08-2018 22:55,1528.0,1.0,2.0,True,30-10-2022 12:16,26-08-2018 05:03,Implementation Issues
+3541371,php: how do i detect if an input string is arabic,is there a way to detect the language of the data being entered via the input field?,"['php', 'language-detection']",3542914,"hmm i may offer an improved version of dimakrasun's function:
+functoin is_arabic($string) {
+    if($string === 'arabic') {
+         return true;
+    }
+    return false;
+}
+
+okay, enough joking!
+pekkas suggestion to use the google translate api is a good one! but you are relying on an external service which is always more complicated etc.
+i think rushyos approch is good! its just not that easy.
+i wrote the following function for you but its not tested, but it should work...
+    <?
+function uniord($u) {
+    // i just copied this function fron the php.net comments, but it should work fine!
+    $k = mb_convert_encoding($u, 'ucs-2le', 'utf-8');
+    $k1 = ord(substr($k, 0, 1));
+    $k2 = ord(substr($k, 1, 1));
+    return $k2 * 256 + $k1;
+}
+function is_arabic($str) {
+    if(mb_detect_encoding($str) !== 'utf-8') {
+        $str = mb_convert_encoding($str,mb_detect_encoding($str),'utf-8');
+    }
+
+    /*
+    $str = str_split($str); <- this function is not mb safe, it splits by bytes, not characters. we cannot use it
+    $str = preg_split('//u',$str); <- this function woulrd probably work fine but there was a bug reported in some php version so it pslits by bytes and not chars as well
+    */
+    preg_match_all('/.|\n/u', $str, $matches);
+    $chars = $matches[0];
+    $arabic_count = 0;
+    $latin_count = 0;
+    $total_count = 0;
+    foreach($chars as $char) {
+        //$pos = ord($char); we cant use that, its not binary safe 
+        $pos = uniord($char);
+        echo $char ."" --> "".$pos.php_eol;
+
+        if($pos >= 1536 && $pos <= 1791) {
+            $arabic_count++;
+        } else if($pos > 123 && $pos < 123) {
+            $latin_count++;
+        }
+        $total_count++;
+    }
+    if(($arabic_count/$total_count) > 0.6) {
+        // 60% arabic chars, its probably arabic
+        return true;
+    }
+    return false;
+}
+$arabic = is_arabic('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½'); 
+var_dump($arabic);
+?>
+
+final thoughts:
+as you see i added for example a latin counter, the range is just a dummy number b ut this way you could detect charsets (hebrew, latin, arabic, hindi, chinese, etc...) 
+you may also want to all the character sets and see which one of course the most... 
+and finally you should consider chopping your string off after 200 chars or something. this should be enough to tell what character set is used.
+and you have to do some error handling! like division by zero, empty string etc etc! don't forget that please... any questions? comment!
+if you want to detect the language of a string, you should split into words and check for the words in some pre-defined tables. you don't need a complete dictionary, just the most common words and it should work fine. tokenization/normalization is a must as well! there are libraries for that anyway and this is not what you asked for :) just wanted to mention it",https://stackoverflow.com/questions/3541371,php,22-08-2010 11:53,27408.0,19.0,10.0,True,21-01-2022 09:07,03-11-2010 00:09,Implementation Issues
+72480729,error when taking fft2d in tensorflow on gpu,"the code below runs on cpu without any problems, but when i change to gpu in colab it fails to calculate the fft2d.
+import tensorflow as tf
+
+sample_fft_input = tf.random.uniform((2, 10, 20))
+sfi = tf.cast(sample_fft_input , tf.complex64)
+sfi = tf.math.real(tf.signal.fft2d(sfi))
+print(sfi.shape) -> tensorshape([2, 10, 20])
+
+but on gpu:
+---------------------------------------------------------------------------
+internalerror                             traceback (most recent call last)
+<ipython-input-41-094e0f7d5037> in <module>()
+      3 sample_fft_input = tf.random.uniform((2, 10, 20))
+      4 sfi = tf.cast(sample_fft_input, tf.complex64)
+----> 5 sfi = tf.math.real(tf.signal.fft2d(sfi))
+      6 print(sfi.shape)
+
+1 frames
+/usr/local/lib/python3.7/dist-packages/tensorflow/python/framework/ops.py in raise_from_not_ok_status(e, name)
+   7162 def raise_from_not_ok_status(e, name):
+   7163   e.message += ("" name: "" + name if name is not none else """")
+-> 7164   raise core._status_to_exception(e) from none  # pylint: disable=protected-access
+   7165 
+   7166 
+
+internalerror: fft failed : type=1 in.shape=[2,10,20] [op:fft2d]","['tensorflow', 'machine-learning', 'nlp', 'tensorflow2.0', 'fft']",72482363,i downgraded to tensorflow 2.8.2 and the problem is gone.,https://stackoverflow.com/questions/72480729,tensorflow,02-06-2022 18:20,157.0,0.0,1.0,True,02-06-2022 21:08,02-06-2022 18:27,Tool Setup/Errors
+76784484,cannot import name amazonkendraretriever from langchain,"i cannot import 'amazonkendraretriever' from langchain due to the following errors
+
+---------------------------------------------------------------------------
+importerror                               traceback (most recent call last)
+cell in[3], line 1
+----> 1 from langchain.retrievers import amazonkendraretriever
+
+importerror: cannot import name 'amazonkendraretriever' from 'langchain.retrievers' (/home/ec2-user/anaconda3/envs/tensorflow2_p310/lib/python3.10/site-packages/langchain/retrievers/__init__.py)
+
+my python version is 3.10.10. i have tried fixing it by pip installing langchain==0.0.201 based on some discussion on a github thread, but that doesn't fix the issue. kindly assist.","['langchain', 'amazon-kendra']",76839928,i changed the kernel from conda_pytorchp310 to conda_python3 and that fixed the issue. running the code from a sagemaker jupyterlab notebook.,https://stackoverflow.com/questions/76784484,langchain,28-07-2023 02:22,705.0,1.0,1.0,True,03-09-2023 23:48,03-09-2023 23:48,Implementation Issues
+69845992,"date pattern for whatsapp chat text file that has 24 hour format, split() error: too many values to unpack","i have a whatsapp chat text file from ios, where it has a 24hour format
+
+[07/04/2018, 14:11:22] mike: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+
+i want to create a dataframe from the text. i've tried different date patterns e.g.
+def datetimeios(s):
+    pattern = '^\[([0-9]+)(\/)([0-9]+)(\/)([0-9]+), ([0-9]+):([0-9]+):([0-9])?\] ' #(am|pm|am|pm)?
+    result = re.match(pattern, s)
+    if result:
+        return true
+    return false 
+
+but they're not working. if i add + [:([0-9]+) ]on the seconds i get split() error: too many values to"" rel=""nofollow noreferrer"">","['python', 'pandas', 'date', 'nlp']",69846118,"try with:
+x = re.search(r""^\[([0-9]+)(\/)([0-9]+)(\/)([0-9]+), ([0-9]+):([0-9]+):([0-9]+)]"", s)
+
+print(x.group())
+
+your output:
+>>> [07/04/2018, 14:11:22]
+
+have a look at this example.",https://stackoverflow.com/questions/69845992,python,04-11-2021 21:22,584.0,0.0,1.0,True,05-11-2021 08:04,05-11-2021 08:04,Tool Setup/Errors
+73788480,removing punctuations in dataframe using for loop,"i have a dataframe that looks like below
+  a        b       c       d      e
+0 orange  dad's  x eyes   3d.    navy
+1 pink.   mum's  bored.   ooo.   nan
+2 yellow  nan    sad      gray   nan
+
+i'm trying to remove punctuations in every column in the dataframe using for loop
+import string
+string.punctuation
+
+#defining the function to remove punctuation
+def remove_punctuation(text):
+    punctuationfree="""".join([i for i in text if i not in string.punctuation])
+    return punctuationfree
+
+#storing the puntuation free text
+col=['a','b','c','d','e']
+
+for i in col:
+    df[i].apply(lambda x:remove_punctuation(x))
+
+but i get
+    ""typeerror                                 traceback (most recent call last)
+    /var/folders/jd/lln92nb4p01g8grr0000gn/t/ipykernel_24651/2417883.py in <module>
+         12 
+         13 for i in col:
+    ---> 14     df[i].apply(lambda x:remove_punctuation(x))
+      
+typeerror: 'float' object is not iterable"" 
+
+can anyone help me on this please? any help would be greatly appreciated!","['python', 'string', 'nlp', 'punctuation']",73788641,"you are getting the error because of nan values, try to check for nan upfront:
+def remove_punctuation(text):
+    if pd.isna(text):
+        return text
+    punctuationfree="""".join([i for i in text if i not in string.punctuation])
+    return punctuationfree
+
+for c in df:
+    df[c] = df[c].apply(remove_punctuation)
+
+output
+# df
+          a     b       c     d     e
+0   orange   dads  x eyes    3d  navy
+1     pink   mums   bored   ooo   nan
+2   yellow   nan     sad  gray   nan",https://stackoverflow.com/questions/73788480,python,20-09-2022 14:36,160.0,1.0,3.0,True,20-09-2022 16:03,20-09-2022 16:03,Preprocessing Tasks
+79293919,determining most popular words in the english dictionary within a dictionary of words,"forgive me if my wording is awful, but i'm trying to figure out how to determine the most used words in the english language from a set of words in a dictionary i've made. i've done some research on nltk but can't seem to find a function within it (or any other library for that matter) that will help me do what i need to do.
+for example:
+a sentence ""i enjoy a cold glass of water on a hot day"" would return ""water"" because it's the most used word in day to day conversation from the sentence. essentially i need a returned value of the most frequently used word in conversations.
+i figure i'll likely have to involve ai, but any time i've tried to use ai i wind up copy and pasting code because i just don't understand it, so i'm trying to avoid going that route
+any and all help is welcome and appreciated.
+for context, i decided to start a project that would essentially guess a predetermined word based on characters the user says it has and doesn't have from the computers guess.","['python', 'nlp', 'nltk', 'detection']",79294074,"you need a external dataset for this task. you can try dataset such as google n gram dataset.
+here is the breakdown of the problem statement:
+
+input: ""i enjoy a cold glass of water on a hot day"". output: ""water"".
+split the sentences into words list.
+
+
+example: [""i"", ""enjoy"", ""a"", ""cold"", ""glass"", ""of"", ""water"", ""on"",
+""a"", ""hot"", ""day""]
+
+
+first loop in through all the word of the sentences. so let say you are at first word ""i"".
+now you will look the same word ""i"" in external dataset and will look for the frequency of that word.
+let say the word ""i"" in external dataset is repeated 5000000 times
+repeat this task for all the word.
+now you will have a dictionary where each word of the sentence is key and value is frequency of that word that you will get from external data.
+frequency in the below example is random value not exact value.
+
+
+{
+    ""i"": 5000000,
+    ""enjoy"": 50000,
+    ""a"": 10000000,
+    ""cold"": 30000,
+    ""glass"": 100000,
+    ""of"": 8000000,
+    ""water"": 1200000,
+    ""on"": 6000000,
+    ""hot"": 700000,
+    ""day"": 400000
+}
+
+
+
+pick the word with highest frequency.
+
+note: you can try any big corpus as external data. using big corpus will have most of the english word which is used in conversation. and even if the frequency is not mentioned then you can create that yourself",https://stackoverflow.com/questions/79293919,python,19-12-2024 10:24,73.0,0.0,2.0,True,19-12-2024 11:17,19-12-2024 10:41,Implementation Issues
+75951190,sentence transformer use of evaluator,"i came across this script which is second link on this page  and this explanation
+i am using all-mpnet-base-v2 (link) and i am using my custom data
+i am having hard time understanding use of
+evaluator = embeddingsimilarityevaluator.from_input_examples(
+    dev_samples, name='sts-dev')
+
+the documentation says:
+
+evaluator ï¿½ï¿½ï¿½ an evaluator (sentence_transformers.evaluation) evaluates the model performance during training on held-out dev data. it is used to determine the best model that is saved to disc.
+
+but in this case, as we are fine tuning on our own examples, train_dataloaderhas train_samples which has our model sentences and scores.
+q1. how is train_samples different than dev_samples?
+q2a: if the model is going to print performance against dev_samples then how is it going to help ""to determine the best model that is saved to disc""?
+q2b: are we required to run dev_samples a the model saved on the disc and then compare scores?
+q3. if my goal is to take a single model and then fine tune it, is it okay to skip parameters evaluator and evaluation_steps?
+q4. how to determine total steps in the model? do i need to set evaluation_steps?
+
+updated
+i followed the answer provided by kyle and have below follow up questions
+in the fit method i used the evaluator and below data was written to a file
+
+q5. which metric is used to select the best epoch? is it cosine_pearson?
+q6: why steps are -1 in the above output?
+q7a: how to find steps based upon size of my data, batch size etc.
+currently i have kept them to 1000. but not sure if that it is too much. i am running for 10 epochs, i have 2509 examples in the training data and batch size is 64.
+q7b: are my steps going to be 2509/64? if yes then 1000 seems to be too high number","['python', 'nlp', 'sentence-transformers']",75981408,"question 1
+
+how is train_samples different from dev_samples in the context of the embeddingsimilarityevaluator?
+
+one needs to have a ""held-out"" split of data to be used for evaluation during training to avoid over-fitting. this ""held-out"" set is commonly referred to as the ""development set"" as it is the set of data that is used during development of the model/system. a pedagogical analogy can be drawn between a traditional education curriculum and that of training deep learning models: if one were to give students all the questions for a given topic, and then use the same subset of questions for evaluation, then eventually (most) students will learn to memorise the set of answers they repeatedly see while practicing, instead of learning the procedures to solve the questions in general. so if you are using your own custom data, make sure that a subset of that data is allocated to dev_samples in addition to train_samples and test_samples. alternatively, if your own data is scarce, you can use the original training data to supplement your own training, development and test sets. the ""test set"" is the one that is only used after training has completed to determine the final performance of the model (i.e. all samples in the test set (ideally) haven't been seen before).
+question 2
+
+how is the model going to determine the best model that is saved to disc? are we required to run dev_samples against the model saved on the disc and then compare scores?
+
+the previous answer alludes to how this will work, but in brief, once the evaluator has been instantiated, it will measure the correlation against the gold labels and then return the similarity score (depending on what main_similarity was initially set). if the produced embeddings (based on the development set) offer a higher correlation with their gold labels, and therefore, a higher score overall, then this ""better"" model is saved to disk. hence, there is no need for you to ""run dev_samples against the model saved on the disc and then compare scores"", this process happens automatically provided everything has been set up appropriately.
+question 3
+
+if my goal is to take a single model and then fine tune it, is it okay to skip parameters evaluator and evaluation_steps?
+
+based on the above answers, you can understand why you cannot ""skip the evaluator and evaluation_steps"". the evaluator is an integral part of ""fine-tuning"" (i.e. training) the model.
+question 4
+
+how to determine the total number of steps for the model? i need to set evaluation_steps.
+
+the evaluation_steps parameter sets the number of training steps that must occur before the model is evaluated using the evaluator. if the authors have set this to 1000, then leave it as is unless you notice problems with training. alternatively, experiment with either increasing of decreasing it and select a value that works best for training.
+follow-up questions
+question 5
+
+which metric is used to select the best epoch? is it cosine_pearson?
+
+by default, the maximum of the cosine spearman, manhattan spearman, euclidean spearman and dot product spearman is used.
+question 6
+
+why are steps -1 in the output?
+
+the -1 lets the user know that the evaluator was called after all training steps occurred for a particular epoch.
+if the steps_per_epoch was not set when calling the model.fit(), it defaults to none which sets the number of steps_per_epoch to the size of the train_dataloader which is passed to train_objectives when model.fit() is initially called, i.e.:
+model.fit(train_objectives=[(train_dataloader, train_loss)],
+          ...)
+
+in your case, train_samples is 2,509 and train_batch_size is 64, so the size of train_dataloader, and therefore steps_per_epoch, will be 39.
+if the steps_per_epoch, is less than the evaluation_steps, then the number of training steps won't reach or exceed evaluation_steps and so additional calls to _eval_during_training on line 737 won't occur. this isn't a problem as the evaluation is forced to call at the end of each epoch anyway based on line 747.
+question 7
+
+how do i find the number of evaluation_steps based on the size of my training data (2,509 samples) and batch size (64)? is 1000 too high?
+
+the evaluation_steps is available to tell the model during the training process whether it should prematurely run an evaluation using the evaluator part-way through an epoch. otherwise, the evaluation is forced to run at the end of the epoch after steps_per_epoch have completed.
+based on the numbers you provided, you could, for example, set evaluation_steps to 20 to get an evaluation to run approx. half-way through an epoch (assuming an epoch is 39 training_steps). see this answer and its question for more info. on batch size vs. epochs vs. steps per epoch.",https://stackoverflow.com/questions/75951190,python,06-04-2023 15:22,2768.0,4.0,1.0,True,14-04-2023 14:56,14-04-2023 14:56,Implementation Issues
+72588288,oserror: [e053] could not read config file from /home/xxxx/.local/lib/python3.9/site-packages/pyresparser/config.cfg,"i am trying to extract data from cv using this tool pyresparser when i installed all the requirements and run my script i got this error.
+code
+from pyresparser import resumeparser
+data = resumeparser('cv.pdf').get_extracted_data()
+
+output
+  file ""c:\users\amjad\desktop\extract_data_from_cv\.env\lib\site-packages\spacy\util.py"", line 487, in load_model_from_path
+    config = load_config(config_path, overrides=overrides)
+  file ""c:\users\amjad\desktop\extract_data_from_cv\.env\lib\site-packages\spacy\util.py"", line 650, in load_config
+    raise ioerror(errors.e053.format(path=config_path, name=""config file""))
+oserror: [e053] could not read config file from c:\users\amjad\desktop\extract_data_from_cv\.env\lib\site-packages\pyresparser\config.cfg
+
+i am running this inside a venv with python version 3.10.4, spacy version 3.3.1, os windows 11, and pipelines en_core_web_sm (3.3.0).
+ps - i did the same steps on google colab and work for me.
+thanks in advance.","['python-3.x', 'spacy']",72646424,"i just figured it out, after being stuck with the same error for a while. it's a version issue:
+pip install nltk
+pip install spacy==2.3.5
+pip install 
+pip install pyresparser
+does the trick. also try different spacy versions and models, because they produce different results. haven't tested any further myself. hope this helps :)
+answer from quppi",https://stackoverflow.com/questions/72588288,python-3.x,11-06-2022 22:33,1184.0,2.0,1.0,True,16-06-2022 13:09,12-06-2022 03:36,Tool Setup/Errors
+77506707,chatbot with gpt3 in angular,"i'm making my own chat application in angular with chatgpt3. when i tried the api url in the documentation, i got error 429. what do you think could be the reason?
+service.ts
+export class openaiservice {
+
+  private apikey = 'sk-xxxx';
+  private apiurl = '
+
+  constructor(private   { }
+
+  teachgpt(usermessage: string): observable<string> {
+    const headers = new 
+      'content-type': 'application/json',
+      'authorization': `bearer ${this.apikey}`
+    });
+
+    const requestdata = {
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'you are a helpful assistant.' },
+        { role: 'user', content: usermessage }
+      ]
+    };
+
+    return this. requestdata, { headers })
+      .pipe(
+        map(response => response.choices[0].message.content),
+        catcherror(error => {
+          console.error('an error occurred:', error);
+          return of('');
+        })
+      );
+  }
+}
+
+chat.ts
+export class chatpagecomponent {
+
+  usermessage: string = '';
+  chatgptresponse: string | undefined;
+
+  constructor(private openaiservice: openaiservice) { }
+
+  onsubmit() {
+    this.openaiservice.teachgpt(this.usermessage)
+      .subscribe(
+        response => {
+          this.chatgptresponse = response;
+          console.log('chatgpt cevabï¿½ï¿½:', response);
+        },
+        error => {
+          console.error('bir hata oluï¿½ï¿½tu:', error);
+        }
+      );
+  }
+}
+
+console error:
+"" rel=""nofollow noreferrer"">
+when i use the url  which is the url in the gpt 3.5 turbo documentation, i get error 429. if the url suggested by gpt was  i got a 400 bad request error.","['angular', 'typescript', 'chatbot', 'openai-api', 'gpt-3']",77514035,"i found the answer to the last one. gpt3 was giving credit to new members for the first 3 months for api trials. when i opened a new account and tried it, the problem was solved.",https://stackoverflow.com/questions/77506707,angular,18-11-2023 11:34,251.0,-2.0,1.0,True,20-11-2023 07:05,19-11-2023 12:08,Uncategorized
+62520221,list index out of range to extract text lines from a df column,"i finally find as a need your guidance and support as i don't detect what is my error in the next piece of code.
+it supposes that ""list index out of range"" rises when you initialize counter improperly to the length of df, but what i am attempting is to return the first then lines of the column descripciï¿½ï¿½n as sample (doc) to apply the nltk stopwords analysis.
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+import numpy as np
+pd.set_option('display.max_columns', none)
+
+import nltk
+from nltk.corpus import stopwords 
+stop_words = stopwords.words('spanish')
+from nltk.stem import wordnetlemmatizer
+import string 
+
+
+import base64
+import re
+from collections import counter 
+
+
+from sklearn.feature_extraction.text import countvectorizer
+from sklearn.base import transformermixin
+from sklearn.pipeline import pipeline
+from sklearn.svm import linearsvc
+import sklearn.feature_extraction.stop_wordom sklearn.metrics import accuracy_score, roc_auc_score, classification_report, confusion_matrix
+import spacy
+spacy.load('es_core_news_sm')
+from spacy.lang.es import spanish
+parser = spanish()
+
+
+df = pd.read_csv('geografia_empleos_mx.csv')
+df.head(2)
+
+del df['unnamed: 0']
+df.head(1)
+
+
+df.isnull().sum()
+
+df1 = df.copy()
+
+df1['fraudulento'].value_counts()
+
+
+
+import spacy
+
+nlp = spacy.load('es_core_news_lg')
+stopwords = stopwords.words('spanish')
+
+
+punctuations = string.punctuation
+
+
+def limpia_texto(docs, logging = false):
+    texts = []
+    counter = 1
+    for doc in docs:
+       if counter % 100 == 0 and logging:
+           print('procesados: {} de {} documentos'.format(counter, len(docs)))
+           counter += 1
+           doc = nlp(doc, disable = ['parser', 'ner'])
+           tokens = [tok.lemma_.lower().strip() for tok in doc if tok.lemma_ != '-pron-']
+           tokens = [tok for tok in tokens if tok not in stopwords and tok not in punctuations]
+           tokens = ' '.join(tokens)
+           texts.append(tokens)
+   return pd.series(texts)   
+
+falso_1 = [text for text in df1[df1['fraudulento'] == 1]['descripciï¿½ï¿½n']]
+
+falso_1[10]    # here is when index error raises :(","['python', 'pandas', 'nlp', 'nltk', 'stop-words']",62521129,"falso_1 does not contain 10 indexes, that's why it raising an error. this line is collecting the columns from your dataframe.
+falso_1 = [text for text in df1[df1['fraudulento'] == 1]['descripciï¿½ï¿½n']]
+
+you should replace it by the more pandas-like:
+falso_1 = df1.loc[df1['fraudulento'] == 1, 'descripciï¿½ï¿½n'].to_numpy()
+falso_1 .shape
+
+falso_1.shape will give you the number of indexes you have in it<",https://stackoverflow.com/questions/62520221,python,22-06-2020 17:31,295.0,0.0,1.0,True,12-11-2021 00:27,12-11-2021 00:27,Tool Setup/Errors
+4470462,associated words,"i am developing a program but stuck on a particular hurdle. i need to find words associated with other words. eg ""green"" might be associated with ""environment"", ""leaf"", ""earth"", ""wind"", ""electric"", ""hybrid"", etc. all i can find is google sets. is there any other resource that is better?",nlp,4483518,"if you have a large text collection (say wikipedia, project gutenberg) you can use co-occurrence scores extract this kind of data. see e.g. padï¿½ï¿½ and lapata and the references therein.
+i recently built a tool that mines this kind of associations from wikipedia database dumps by another method. it requires a lot of memory though; other folks have tried to do the same using randomized methods.",https://stackoverflow.com/q/4470462,nlp,17-12-2010 12:31,699.0,2.0,2.0,True,26-03-2022 02:25,17-12-2010 12:33,Implementation Issues
